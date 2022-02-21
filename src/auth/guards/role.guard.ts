@@ -24,6 +24,10 @@ export class RolesGuard implements CanActivate {
     console.log(requiredRoles);
 
     // const user: User = context.switchToHttp().getRequest();
+    // ! ON RECUPERE BIEN LE USER NOW !!
+    // ! ON RECUPERE BIEN LE USER NOW !!
+    // ! ON RECUPERE BIEN LE USER NOW !!
+    // ! ON RECUPERE BIEN LE USER NOW !!
     const user: User =
       GqlExecutionContext.create(context).getContext().req.user;
     // console.log('user  : ', context.switchToHttp().getRequest());
