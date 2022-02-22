@@ -81,6 +81,7 @@ export class User extends BaseEntity {
 
   // Assigne le role User par défaut avant l'insertion
   // ! Ne fonctionne pas
+  // ! Inserer manullement le role par defaut dans le fonction user.create() et dans le user seeder
   @BeforeInsert()
   async defaultRole() {
     if (this.roles || this.roles?.length >= 1) return;
