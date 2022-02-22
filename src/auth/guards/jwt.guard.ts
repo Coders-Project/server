@@ -39,6 +39,7 @@ export class JwtAuthGard extends AuthGuard('jwt') {
 
     // Important pour que passport.js puisse recuperer le token dans le header authorization de la requete
     // Passport.js fera ensuite req.headers.authorization pour accéder au token
+    // Voir fichier src/auth/strategy/jwt.strategy.ts
     return gqlReq;
   }
 }
