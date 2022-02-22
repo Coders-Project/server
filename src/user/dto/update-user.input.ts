@@ -4,7 +4,7 @@ import { User } from '../entities/user.entity';
 
 @InputType()
 class SubUpdateUserInput extends PartialType(
-  OmitType(User, ['createdAt', 'id', 'role', 'profile'], InputType),
+  OmitType(User, ['createdAt', 'id', 'roles', 'profile'], InputType),
 ) {}
 
 @InputType()

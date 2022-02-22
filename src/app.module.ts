@@ -26,6 +26,7 @@ import { UserModule } from './user/user.module';
     ProfileModule,
   ],
   // providers: [{ provide: APP_GUARD, useClass: RolesGuard }],
+  // providers: [{ provide: APP_GUARD, useClass: JwtAuthGard }],
 })
 export class AppModule {
   constructor(private connection: Connection) {}

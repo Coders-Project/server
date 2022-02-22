@@ -5,7 +5,6 @@
 type Role {
   id: String!
   label: String!
-  user: User!
 }
 
 type User {
@@ -13,8 +12,9 @@ type User {
   username: String!
   email: String!
   createdAt: DateTime!
-  role: RoleWithoutUser!
+  roles: Role!
   profile: ProfileWithoutUser!
+  role: RoleWithoutUser!
 }
 
 """
@@ -28,14 +28,14 @@ type Profile {
   user: User!
 }
 
-type RoleWithoutUser {
-  id: String!
-  label: String!
-}
-
 type ProfileWithoutUser {
   displayName: String
   bio: String
+}
+
+type RoleWithoutUser {
+  id: String!
+  label: String!
 }
 
 type FindAllUserOutput {

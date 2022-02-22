@@ -7,24 +7,26 @@ import {
   Matches,
   validateOrReject,
 } from 'class-validator';
-import { UserRoles } from 'src/role/dto/role.enum';
 import {
+  BaseEntity,
   BeforeInsert,
   BeforeUpdate,
   Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
-  ManyToOne,
+  JoinTable,
+  ManyToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Profile } from '../../profile/entites/profile.entity';
+import { UserRoles } from '../../role/dto/role.enum';
 import { Role } from '../../role/entities/role.entity';
 
 @ObjectType()
 @Entity()
-export class User {
+export class User extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
   id: number;
@@ -53,10 +55,16 @@ export class User {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
+  // @Field(() => Role)
+  // @ManyToOne(() => Role, (role) => role.user)
+  // @JoinColumn()
+  // role: Role;
   @Field(() => Role)
-  @ManyToOne(() => Role, (role) => role.user)
-  @JoinColumn()
-  role: Role;
+  // @ManyToMany(() => Role, (role) => role.users, { cascade: true, eager: true })
+  @ManyToMany(() => Role, { cascade: true, eager: true })
+  @JoinTable()
+  // roles: Role[] = [(new Role().id = UserRoles.User)];
+  roles: Role[];
 
   @Field(() => Profile)
   @OneToOne(() => Profile, (role) => role.user, { cascade: true })
@@ -75,13 +83,35 @@ export class User {
   async hashPassword() {
     this.password = await hash(this.password, 10);
   }
+  // @Default
+  // constructor(private repo: Repos) {
+  //   // const role = new Role();
+  //   // role.id = UserRoles.User;
+  //   // // console.log(role);
+  //   // this.roles = [role];
+  // }
 
   // Assigne le role User par défaut avant l'insertion
+  // @BeforeInsert()
   @BeforeInsert()
   async defaultRole() {
-    if (this.role) return;
+    console.log('DEFAULT ROLE');
+    if (this.roles || this.roles?.length >= 1) return;
+
     const role = new Role();
     role.id = UserRoles.User;
-    this.role = role;
+    console.log(role);
+    // this
+    // this.roles = [role.id];
+    // this.roles = [role];
+    // this.role = role;
+
+    await this.save();
+    // await this.reload();
+
+    console.log('this ', this);
+    console.log('this.ROLL ', this.roles);
+    // this.roles = role;
+    // return this;
   }
 }

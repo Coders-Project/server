@@ -27,7 +27,8 @@ define(
     if (context?.role) {
       const role = new Role();
       role.id = context.role;
-      user.role = role;
+      user.roles = [role];
+      // user.roles = role;
     }
 
     user.password = 'admin';
