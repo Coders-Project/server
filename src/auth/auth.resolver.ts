@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { CurrentUser } from './dto/current-user.decorator';
 import { LoginInput } from './dto/login.input';
 import { LoginOutput } from './dto/login.output';
+import { Public } from './dto/public.decorator';
 // import { Auth } from './entities/auth.entity';
 import { GqlAuthGuard } from './guards/local.guard';
 
@@ -17,6 +18,7 @@ export class AuthResolver {
     private readonly userService: UserService,
   ) {}
 
+  @Public()
   @UseGuards(GqlAuthGuard)
   @Query(() => LoginOutput)
   async login(
@@ -27,7 +29,6 @@ export class AuthResolver {
     return { user, ...token };
   }
 
-  // @UseGuards(GqlAuthGuard)
   @Query(() => LoginOutput)
   async rememberMe(@Context() ctx: BaseContext): Promise<LoginOutput> {
     const token = ctx.req.headers.authorization;

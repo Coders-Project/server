@@ -55,15 +55,10 @@ export class User extends BaseEntity {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  // @Field(() => Role)
-  // @ManyToOne(() => Role, (role) => role.user)
-  // @JoinColumn()
-  // role: Role;
   @Field(() => Role)
-  // @ManyToMany(() => Role, (role) => role.users, { cascade: true, eager: true })
+  // eager permet de join automatiquement la relation au fetch du user
   @ManyToMany(() => Role, { cascade: true, eager: true })
   @JoinTable()
-  // roles: Role[] = [(new Role().id = UserRoles.User)];
   roles: Role[];
 
   @Field(() => Profile)
@@ -83,35 +78,16 @@ export class User extends BaseEntity {
   async hashPassword() {
     this.password = await hash(this.password, 10);
   }
-  // @Default
-  // constructor(private repo: Repos) {
-  //   // const role = new Role();
-  //   // role.id = UserRoles.User;
-  //   // // console.log(role);
-  //   // this.roles = [role];
-  // }
 
   // Assigne le role User par défaut avant l'insertion
-  // @BeforeInsert()
+  // ! Ne fonctionne pas
   @BeforeInsert()
   async defaultRole() {
-    console.log('DEFAULT ROLE');
     if (this.roles || this.roles?.length >= 1) return;
 
     const role = new Role();
     role.id = UserRoles.User;
-    console.log(role);
-    // this
-    // this.roles = [role.id];
-    // this.roles = [role];
-    // this.role = role;
 
-    await this.save();
-    // await this.reload();
-
-    console.log('this ', this);
-    console.log('this.ROLL ', this.roles);
-    // this.roles = role;
-    // return this;
+    this.roles = [role];
   }
 }

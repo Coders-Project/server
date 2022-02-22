@@ -10,34 +10,49 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    // On recupere les metadonnées des Roles injectée via le decorateur
+    // On recupere les metadonnée du décorateur -> @Roles()
+    // Ex : @Roles(UserRoles.Moderator) -> on va donc recuperer la valeur ici
     const requiredRoles = this.reflector.getAllAndOverride<UserRoles[]>(
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
 
-    console.log('user  : ', 'user');
-    // return false;
+    // Si aucun role requis alors on desactive le role guard
+    // -> Le user peut donc accéder a la ressource
     if (!requiredRoles) {
       return true;
     }
-    console.log(requiredRoles);
 
-    // const user: User = context.switchToHttp().getRequest();
-    // ! ON RECUPERE BIEN LE USER NOW !!
-    // ! ON RECUPERE BIEN LE USER NOW !!
-    // ! ON RECUPERE BIEN LE USER NOW !!
-    // ! ON RECUPERE BIEN LE USER NOW !!
+    // On recupere le user dans l'objet request
     const user: User =
       GqlExecutionContext.create(context).getContext().req.user;
-    // console.log('user  : ', context.switchToHttp().getRequest());
-    console.log(user);
 
-    return true;
+    // On rajoute les roles en dessous de la hierarchie du role actuel
+    // Ex : Le role admin -> obtient egalement le role 'moderator' et 'user'
+    const includesRoles = this.cascadeRole(user.roles.map((role) => role.id));
 
-    // return requiredRoles.some((role) => user.roles?.includes(role));
-    // return requiredRoles.some((role) => user?.role.id === role);
-    // return user.role.id === requiredRoles;
-    // return user;
+    // On verifie si l'utilisateur a un des roles requis
+    // Si oui il est autorisé a accéder a la ressource
+    return requiredRoles.some((role) => includesRoles.includes(role));
+  }
+
+  cascadeRole(roles: UserRoles[]) {
+    const includesRoles = [];
+    roles.forEach((role) => {
+      if (role === UserRoles.Admin) {
+        includesRoles.push(
+          UserRoles.Admin,
+          UserRoles.Moderator,
+          UserRoles.User,
+        );
+      }
+      if (role === UserRoles.Moderator) {
+        includesRoles.push(UserRoles.Moderator, UserRoles.User);
+      }
+      if (role === UserRoles.User) {
+        includesRoles.push(UserRoles.User);
+      }
+    });
+    return includesRoles;
   }
 }
