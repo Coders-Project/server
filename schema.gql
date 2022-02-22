@@ -1,0 +1,93 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Role {
+  id: String!
+  label: String!
+  user: User!
+}
+
+type User {
+  id: Int!
+  username: String!
+  email: String!
+  createdAt: DateTime!
+  role: RoleWithoutUser!
+  profile: ProfileWithoutUser!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Profile {
+  displayName: String
+  bio: String
+  user: User!
+}
+
+type RoleWithoutUser {
+  id: String!
+  label: String!
+}
+
+type ProfileWithoutUser {
+  displayName: String
+  bio: String
+}
+
+type FindAllUserOutput {
+  total: Int!
+  users: [User!]!
+}
+
+type LoginOutput {
+  accessToken: String!
+  user: User!
+}
+
+type Query {
+  users(input: FindAllUserInput): FindAllUserOutput!
+  user(id: Int!): User!
+  me: User!
+  login(input: LoginInput!): LoginOutput!
+  rememberMe: LoginOutput!
+}
+
+input FindAllUserInput {
+  page: Int
+  take: Int
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!): User!
+  updateUser(update: UpdateUserInput!): User!
+}
+
+input CreateUserInput {
+  username: String!
+  email: String!
+  password: String!
+}
+
+input UpdateUserInput {
+  user: SubUpdateUserInput
+  profile: SubUpdateProfileInput
+}
+
+input SubUpdateUserInput {
+  username: String
+  email: String
+}
+
+input SubUpdateProfileInput {
+  displayName: String
+  bio: String
+}
