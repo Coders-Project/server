@@ -1,6 +1,7 @@
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Repository } from 'typeorm';
 // import { UserModule } from '../../user.module';
 import { UserModule } from '../../user/user.module';
 import { AuthResolver } from '../auth.resolver';
@@ -24,7 +25,12 @@ describe('AuthService', () => {
         }),
       ],
       providers: [AuthResolver, AuthService, LocalStrategy, JwtStrategy],
-    }).compile();
+    })
+      .overrideProvider('UserRepository')
+      .useClass(Repository)
+      .overrideProvider('ProfileRepository')
+      .useClass(Repository)
+      .compile();
 
     service = module.get<AuthService>(AuthService);
   });

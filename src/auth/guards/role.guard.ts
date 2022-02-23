@@ -27,7 +27,7 @@ export class RolesGuard implements CanActivate {
     const user: User =
       GqlExecutionContext.create(context).getContext().req.user;
 
-    // On rajoute les roles en dessous de la hierarchie du role actuel
+    // On rajoute les roles qui sont en dessous dans la hierarchie du role actuel
     // Ex : Le role admin -> obtient egalement le role 'moderator' et 'user'
     const includesRoles = this.cascadeRole(user.roles.map((role) => role.id));
 
