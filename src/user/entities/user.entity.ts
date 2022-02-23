@@ -23,7 +23,6 @@ import {
 import { Profile } from '../../profile/entites/profile.entity';
 import { UserRoles } from '../../role/dto/role.enum';
 import { Role } from '../../role/entities/role.entity';
-
 @ObjectType()
 @Entity()
 export class User extends BaseEntity {
