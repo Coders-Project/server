@@ -11,15 +11,6 @@ define(
     context: { username?: string; email?: string; role?: UserRoles },
   ) => {
     const user = new User();
-    // faker.
-    // const test = [];
-    // user.username =
-    //   context?.username || faker.unique(() => faker.name.firstName(), test);
-    // faker.unique((test) => {
-    //   const name = faker.name.firstName();
-    //   test.push(name);
-    //   return name;
-    // });
 
     user.username = context?.username || faker.name.firstName();
     user.email = context?.email || faker.internet.email();

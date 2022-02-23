@@ -47,7 +47,7 @@ export class User extends BaseEntity {
   @HideField()
   @Column()
   @IsString()
-  @Length(5, 250)
+  @Length(5, 45)
   password: string;
 
   @Field(() => Date)

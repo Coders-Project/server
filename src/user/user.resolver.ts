@@ -9,6 +9,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { CurrentUser } from '../auth/dto/current-user.decorator';
+import { Public } from '../auth/dto/public.decorator';
 import { Roles } from '../auth/dto/roles.decorator';
 import { ProfileWithoutUser } from '../profile/dto/profile-without-user.input';
 import { Profile } from '../profile/entites/profile.entity';
@@ -27,6 +28,7 @@ import { UserService } from './user.service';
 export class userResolver {
   constructor(private readonly userService: UserService) {}
 
+  @Public()
   @Mutation(() => User)
   async createUser(@Args('input') input: CreateUserInput) {
     return this.userService.create(input);

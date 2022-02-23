@@ -31,6 +31,10 @@ export class UserService {
     await this.profileRepository.save(profile);
     user.profile = profile;
 
+    // const role = new Role();
+    // role.id = UserRoles.User;
+    // user.roles = [role];
+
     await this.usersRepository.save(user);
 
     return user;

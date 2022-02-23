@@ -1,7 +1,6 @@
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaService } from '../../prisma/prisma.service';
 // import { UserModule } from '../../user.module';
 import { UserModule } from '../../user/user.module';
 import { AuthResolver } from '../auth.resolver';
@@ -24,13 +23,7 @@ describe('AuthService', () => {
           },
         }),
       ],
-      providers: [
-        AuthResolver,
-        AuthService,
-        LocalStrategy,
-        JwtStrategy,
-        PrismaService,
-      ],
+      providers: [AuthResolver, AuthService, LocalStrategy, JwtStrategy],
     }).compile();
 
     service = module.get<AuthService>(AuthService);

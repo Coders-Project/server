@@ -41,7 +41,9 @@ export default class CreateUser implements Seeder {
       })
       .create();
 
-    await factory(User)()
+    await factory(User)({
+      role: UserRoles.User,
+    })
       .map(async (user) => {
         user.profile = await factory(Profile)().create();
         return user;

@@ -15,7 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  // Après recupéré le token dans req.headers.authorization ->
+  // Après que passport est recupéré le token dans req.headers.authorization ->
   // Si le token est valide (signé avec la bonne secret key / date expiration) passport.js declenche cette fonction
   // On obtient en params le payload du token decodé
   async validate(payload: JwtPayload) {

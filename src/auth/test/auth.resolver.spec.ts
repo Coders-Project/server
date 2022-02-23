@@ -6,7 +6,6 @@ import { AuthResolver } from '../auth.resolver';
 import { AuthService } from '../auth.service';
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import { LocalStrategy } from '../strategies/local.strategy';
-import { PrismaService } from './../../prisma/prisma.service';
 
 describe('AuthResolver', () => {
   let resolver: AuthResolver;
@@ -16,6 +15,7 @@ describe('AuthResolver', () => {
       imports: [
         PassportModule,
         UserModule,
+        // TypeOrmModule.forRoot(),
         JwtModule.register({
           secret: process.env.JWT_SECRET,
           signOptions: {
@@ -23,13 +23,7 @@ describe('AuthResolver', () => {
           },
         }),
       ],
-      providers: [
-        AuthResolver,
-        AuthService,
-        LocalStrategy,
-        JwtStrategy,
-        PrismaService,
-      ],
+      providers: [AuthResolver, AuthService, LocalStrategy, JwtStrategy],
     }).compile();
 
     resolver = module.get<AuthResolver>(AuthResolver);
