@@ -1,50 +1,45 @@
-import { ExecutionContext } from '@nestjs/common';
+import { ExecutionContext, Injectable } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { AuthGuard } from '@nestjs/passport';
+import { Observable } from 'rxjs';
+import { IS_PUBLIC_KEY } from '../dto/public.decorator';
 
-//! Faire la verif des roles dans Dasn le jwrt Guard
-//! Faire la verif des roles dans Dasn le jwrt Guard
-//! Faire la verif des roles dans Dasn le jwrt Guard
-
+@Injectable()
 export class JwtAuthGard extends AuthGuard('jwt') {
-  // constructor(private reflector: Reflector) {
-  //   super();
-  // }
+  constructor(private reflector: Reflector) {
+    super();
+  }
 
-  // canActivate(context: ExecutionContext) {
-  //   // super.logIn(context.switchToHttp().getRequest());
-  //   // return null
-  //   const requiredRoles = this.reflector.getAllAndOverride<UserRoles[]>(
-  //     ROLES_KEY,
-  //     [context.getHandler(), context.getClass()],
-  //   );
-  //   const user: User = context.switchToHttp().getRequest().user;
-  //   // if (requiredRoles.some((role) => user.roles?.includes(role))) {
-  //   if (!requiredRoles.some((role) => user?.role.id === role)) {
-  //     return null;
-  //   }
-  //   // if (user.role.id ====)
-  //   // this.getRequest()
-  //   return super.canActivate(context);
-  // }
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
+    // On recupere la metadonnée du décorateur -> @Public()
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
-  // handleRequest<User = any>(
-  //   err: any,
-  //   user: any,
-  //   info: any,
-  //   context: any,
-  //   status?: any,
-  // ): User {
-  //   if (err || !user) {
-  //     throw err || new UnauthorizedException();
-  //   }
-  //   return user;
-  // }
+    // Si public alors un user non authentifié peut accéder a la ressource
+    if (isPublic) {
+      return true;
+    }
 
+    // Sinon on passe le relai au garde suivant
+    return super.canActivate(context);
+  }
+
+  // Fonction de passport.js qui injecte les données return dans la req.user
+  // Qui est ensuite utilisé dans la strategie pour decode le token d'authentification
+  // Voir fichier src/auth/strategy/jwt.strategy.ts
   getRequest(context: ExecutionContext) {
     const ctx = GqlExecutionContext.create(context);
+    // On recupere l'objet request du context
     const gqlReq = ctx.getContext().req;
 
+    // Important pour que passport.js puisse recuperer le token dans le header authorization de la requete
+    // Passport.js fera ensuite req.headers.authorization pour accéder au token
+    // Voir fichier src/auth/strategy/jwt.strategy.ts
     return gqlReq;
   }
 }

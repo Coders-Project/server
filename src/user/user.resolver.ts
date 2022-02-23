@@ -10,7 +10,6 @@ import {
 } from '@nestjs/graphql';
 import { CurrentUser } from '../auth/dto/current-user.decorator';
 import { Roles } from '../auth/dto/roles.decorator';
-import { RolesGuard } from '../auth/guards/role.guard';
 import { ProfileWithoutUser } from '../profile/dto/profile-without-user.input';
 import { Profile } from '../profile/entites/profile.entity';
 import { RoleWithoutUser } from '../role/dto/role-without-user';
@@ -33,8 +32,6 @@ export class userResolver {
     return this.userService.create(input);
   }
 
-  // @UseGuards(JwtAuthGard)
-  // ! Mettre un guard
   @Query(() => FindAllUserOutput, { name: 'users' })
   async findAll(
     @Args('input', { nullable: true }) input?: FindAllUserInput,
@@ -43,8 +40,6 @@ export class userResolver {
   }
 
   @Roles(UserRoles.Moderator)
-  // @UseGuards(RolesGuard)
-  @UseGuards(JwtAuthGard, RolesGuard)
   @Query(() => User, { name: 'user' })
   findById(@Args('id', { type: () => Int }) id: number): Promise<User> {
     return this.userService.findOne(id);
@@ -65,7 +60,7 @@ export class userResolver {
     return this.userService.update(user.id, updateInput);
   }
 
-  @ResolveField(() => RoleWithoutUser, { name: 'role' })
+  @ResolveField(() => [RoleWithoutUser], { name: 'roles' })
   getRole(@Parent() user: User): Promise<Role[]> {
     return this.userService.getRole(user.id);
   }
