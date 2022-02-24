@@ -86,7 +86,7 @@ export class User extends BaseEntity {
     if (this.roles || this.roles?.length >= 1) return;
 
     const role = new Role();
-    role.id = UserRoles.User;
+    role.level = UserRoles.User;
 
     this.roles = [role];
   }

@@ -2,15 +2,22 @@ import { createMock } from '@golevelup/ts-jest';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRoles } from '../../role/dto/role.enum';
+import { Role } from '../../role/entities/role.entity';
+import { User } from '../../user/entities/user.entity';
 import { RolesGuard } from './role.guard';
 
 const getUserMockWithRole = (roles: UserRoles[]) => {
   // On utilise un tableau d'une taille de 3 car c'est comme cela que le framework fonctionne en interne
+  const user: Partial<User> = {
+    roles: roles.map((r) => {
+      const role = new Role();
+      role.level = r;
+      return role;
+    }),
+  };
   return Array(3).fill({
     req: {
-      user: {
-        roles: roles.map((r) => ({ id: r })),
-      },
+      user: user,
     },
   });
 };

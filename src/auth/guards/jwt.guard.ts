@@ -15,13 +15,13 @@ export class JwtAuthGard extends AuthGuard('jwt') {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     // On recupere la metadonnée du décorateur -> @Public()
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
     // Si public alors un user non authentifié peut accéder a la ressource
-    if (isPublic) {
+    if (
+      this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ])
+    ) {
       return true;
     }
 

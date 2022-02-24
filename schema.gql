@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 
 type Role {
-  id: String!
+  level: String!
   label: String!
   users: User!
 }
@@ -34,7 +34,7 @@ type ProfileWithoutUser {
 }
 
 type RoleWithoutUser {
-  id: String!
+  level: String!
   label: String!
 }
 

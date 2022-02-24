@@ -8,7 +8,7 @@ import { UserRoles } from '../dto/role.enum';
 export class Role {
   @Field(() => String)
   @PrimaryColumn()
-  id: UserRoles;
+  level: UserRoles;
 
   @Field(() => String)
   @Column()

@@ -25,20 +25,19 @@ export class AuthResolver {
     @Args('input') input: LoginInput,
     @CurrentUser() user: User,
   ): Promise<LoginOutput> {
-    const token = this.authService.login(user);
-    return { user, ...token };
+    return { user, ...this.authService.login(user) };
   }
 
   @Query(() => LoginOutput)
   async rememberMe(@Context() ctx: BaseContext): Promise<LoginOutput> {
     const token = ctx.req.headers.authorization;
-    const tokenDecode = this.authService.decodeJwt(token);
+    const tokenPayload = this.authService.decodeJwt(token);
 
-    if (!tokenDecode) {
+    if (!tokenPayload) {
       throw new NotFoundException();
     }
 
-    const userFind = await this.userService.findOne(tokenDecode.userID);
+    const userFind = await this.userService.findOne(tokenPayload.userID);
 
     const newToken = this.authService.login(userFind);
 

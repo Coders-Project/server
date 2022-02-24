@@ -20,9 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   // On obtient en params le payload du token decodé
   async validate(payload: JwtPayload) {
     // On recupere le user associé a l'id injecté dans le payload du token
-    const user = this.userService.findOne(payload.userID);
-
     // Passport injecte user dans l'objet 'user' de la request -> req.user
-    return user;
+    return this.userService.findOne(payload.userID);
   }
 }

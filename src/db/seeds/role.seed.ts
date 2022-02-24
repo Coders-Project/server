@@ -8,15 +8,15 @@ export default class CreateRole implements Seeder {
     await connection.getRepository(Role).delete({});
 
     await connection.getRepository(Role).insert({
-      id: UserRoles.User,
+      level: UserRoles.User,
       label: 'user',
     });
     await connection.getRepository(Role).insert({
-      id: UserRoles.Moderator,
+      level: UserRoles.Moderator,
       label: 'moderator',
     });
     await connection.getRepository(Role).insert({
-      id: UserRoles.Admin,
+      level: UserRoles.Admin,
       label: 'administrator',
     });
   }

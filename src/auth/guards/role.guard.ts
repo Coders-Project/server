@@ -27,32 +27,13 @@ export class RolesGuard implements CanActivate {
     const user: User =
       GqlExecutionContext.create(context).getContext().req.user;
 
-    // On rajoute les roles qui sont en dessous dans la hierarchie du role actuel
-    // Ex : Le role admin -> obtient egalement le role 'moderator' et 'user'
-    const includesRoles = this.cascadeRole(user.roles.map((role) => role.id));
+    // On recupere le role du user le plus haut dans la hierarchie
+    const maxUserRole = user.roles.sort((a, b) => b.level - a.level)[0].level;
+    // On recupere le role requis le plus bas dans la hierarchie
+    const minRequiredRole = requiredRoles.sort((a, b) => a - b)[0];
 
-    // On verifie si l'utilisateur a un des roles requis
+    // On compare les deux roles et verifie si il peut lire la ressource
     // Si oui il est autorisé a accéder a la ressource
-    return requiredRoles.some((role) => includesRoles.includes(role));
-  }
-
-  cascadeRole(roles: UserRoles[]) {
-    const includesRoles = [];
-    roles.forEach((role) => {
-      if (role === UserRoles.Admin) {
-        includesRoles.push(
-          UserRoles.Admin,
-          UserRoles.Moderator,
-          UserRoles.User,
-        );
-      }
-      if (role === UserRoles.Moderator) {
-        includesRoles.push(UserRoles.Moderator, UserRoles.User);
-      }
-      if (role === UserRoles.User) {
-        includesRoles.push(UserRoles.User);
-      }
-    });
-    return includesRoles;
+    return minRequiredRole <= maxUserRole;
   }
 }

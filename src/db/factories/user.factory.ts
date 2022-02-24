@@ -17,7 +17,7 @@ define(
 
     if (context?.role) {
       const role = new Role();
-      role.id = context.role;
+      role.level = context.role;
       user.roles = [role];
       // user.roles = role;
     }
