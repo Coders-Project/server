@@ -1,6 +1,6 @@
 import { NotFoundException, UseGuards } from '@nestjs/common';
-import { Args, Context, Query, Resolver } from '@nestjs/graphql';
-import { BaseContext } from 'apollo-server-types';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { CreateUserInput } from '../user/dto/create-user.input';
 import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
 import { AuthService } from './auth.service';
@@ -28,16 +28,23 @@ export class AuthResolver {
     return { user, ...this.authService.login(user) };
   }
 
-  @Query(() => LoginOutput)
-  async rememberMe(@Context() ctx: BaseContext): Promise<LoginOutput> {
-    const token = ctx.req.headers.authorization;
-    const tokenPayload = this.authService.decodeJwt(token);
+  @Public()
+  @Mutation(() => LoginOutput)
+  async createUser(
+    @Args('input') input: CreateUserInput,
+  ): Promise<LoginOutput> {
+    const userCreate = await this.userService.create(input);
+    const token = this.authService.login(userCreate);
+    return { user: userCreate, accessToken: token.accessToken };
+  }
 
-    if (!tokenPayload) {
+  @Query(() => LoginOutput)
+  async rememberMe(@CurrentUser() user: User): Promise<LoginOutput> {
+    const userFind = await this.userService.findOne(user.id);
+
+    if (!userFind) {
       throw new NotFoundException();
     }
-
-    const userFind = await this.userService.findOne(tokenPayload.userID);
 
     const newToken = this.authService.login(userFind);
 

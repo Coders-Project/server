@@ -8,8 +8,8 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+// import { LoginOutput } from '../../graphql/mutations/register/register.generated';
 import { CurrentUser } from '../auth/dto/current-user.decorator';
-import { Public } from '../auth/dto/public.decorator';
 import { Roles } from '../auth/dto/roles.decorator';
 import { ProfileWithoutUser } from '../profile/dto/profile-without-user.input';
 import { Profile } from '../profile/entites/profile.entity';
@@ -17,7 +17,6 @@ import { RoleWithoutUser } from '../role/dto/role-without-user';
 import { UserRoles } from '../role/dto/role.enum';
 import { Role } from '../role/entities/role.entity';
 import { JwtAuthGard } from './../auth/guards/jwt.guard';
-import { CreateUserInput } from './dto/create-user.input';
 import { FindAllUserInput } from './dto/findall-user.input';
 import { FindAllUserOutput } from './dto/findall-user.output';
 import { UpdateUserInput } from './dto/update-user.input';
@@ -27,12 +26,6 @@ import { UserService } from './user.service';
 @Resolver(() => User)
 export class userResolver {
   constructor(private readonly userService: UserService) {}
-
-  @Public()
-  @Mutation(() => User)
-  async createUser(@Args('input') input: CreateUserInput) {
-    return this.userService.create(input);
-  }
 
   @Query(() => FindAllUserOutput, { name: 'users' })
   async findAll(

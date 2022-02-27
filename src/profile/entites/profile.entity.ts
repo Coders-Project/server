@@ -18,7 +18,7 @@ export class Profile {
   @Field(() => String, { nullable: true })
   @Column({ nullable: true, length: 50 })
   @Length(1, 50)
-  displayName: string;
+  displayname: string;
 
   @Field(() => String, { nullable: true })
   @Column({ nullable: true, length: 300 })

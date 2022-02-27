@@ -23,13 +23,13 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 scalar DateTime
 
 type Profile {
-  displayName: String
+  displayname: String
   bio: String
   user: User!
 }
 
 type ProfileWithoutUser {
-  displayName: String
+  displayname: String
   bio: String
 }
 
@@ -67,14 +67,8 @@ input LoginInput {
 }
 
 type Mutation {
-  createUser(input: CreateUserInput!): User!
   updateUser(update: UpdateUserInput!): User!
-}
-
-input CreateUserInput {
-  username: String!
-  email: String!
-  password: String!
+  createUser(input: CreateUserInput!): LoginOutput!
 }
 
 input UpdateUserInput {
@@ -88,6 +82,12 @@ input SubUpdateUserInput {
 }
 
 input SubUpdateProfileInput {
-  displayName: String
+  displayname: String
   bio: String
+}
+
+input CreateUserInput {
+  username: String!
+  email: String!
+  password: String!
 }

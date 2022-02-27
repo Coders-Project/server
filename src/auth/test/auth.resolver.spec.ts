@@ -3,12 +3,12 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Repository } from 'typeorm';
-import { JwtPayload } from '../../../dist/auth/dto/jwt-payload';
 import { User } from '../../user/entities/user.entity';
 import { UserModule } from '../../user/user.module';
 import { UserService } from '../../user/user.service';
 import { AuthResolver } from '../auth.resolver';
 import { AuthService } from '../auth.service';
+import { JwtPayload } from '../dto/jwt-payload';
 import { IS_PUBLIC_KEY } from '../dto/public.decorator';
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import { LocalStrategy } from '../strategies/local.strategy';
@@ -63,33 +63,18 @@ describe('AuthResolver', () => {
   });
 
   it('when rememberMe() is called', async () => {
-    const jwtPayload: JwtPayload = {
-      userID: 999,
-    };
-
-    const token = jwtService.sign(jwtPayload);
-
-    const contextMock = {
-      req: {
-        headers: {
-          authorization: token,
-        },
-      },
-    };
-
-    const userMock: Partial<User> = {
-      id: jwtPayload.userID,
-    };
+    const userMock = {
+      id: 999,
+    } as User;
 
     userService.findOne = jest.fn().mockReturnValue(userMock);
 
-    const result = await authResolver.rememberMe(contextMock);
+    const result = await authResolver.rememberMe(userMock);
 
-    expect(result).toStrictEqual({
-      user: { ...userMock },
-      accessToken: token,
-    });
-    // authService.decodeJwt = jest.fn().mockReturnValue();
+    const tokenDecode = jwtService.decode(result.accessToken) as JwtPayload;
+
+    expect(tokenDecode.userID).toBe(userMock.id);
+
     // tester si en passant un token valide elle return un user avec l'id qui est dans le payload
     // tester si en passant un token invalide elle renvoie une erreur
   });

@@ -1,6 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { UserRoles } from '../role/dto/role.enum';
+import { Role } from '../role/entities/role.entity';
 import { Profile } from './../profile/entites/profile.entity';
 // import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserInput } from './dto/create-user.input';
@@ -31,9 +33,9 @@ export class UserService {
     await this.profileRepository.save(profile);
     user.profile = profile;
 
-    // const role = new Role();
-    // role.id = UserRoles.User;
-    // user.roles = [role];
+    const role = new Role();
+    role.level = UserRoles.User;
+    user.roles = [role];
 
     await this.usersRepository.save(user);
 

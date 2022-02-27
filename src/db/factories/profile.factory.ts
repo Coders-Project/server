@@ -6,7 +6,7 @@ define(Profile, (faker: typeof Faker) => {
   const profile = new Profile();
 
   profile.bio = faker.lorem.sentences(3);
-  profile.displayName = faker.name.findName();
+  profile.displayname = faker.name.findName();
 
   return profile;
 });
