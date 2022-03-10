@@ -47,7 +47,7 @@ export class User extends BaseEntity {
   @HideField()
   @Column()
   @IsString()
-  @Length(5, 45)
+  @Length(5, 250)
   password: string;
 
   @Field(() => Date)
@@ -57,11 +57,11 @@ export class User extends BaseEntity {
   @Field(() => Role)
   // eager permet de join automatiquement la relation au fetch du user
   @ManyToMany(() => Role, { cascade: true, eager: true })
-  @JoinTable()
+  @JoinTable({ name: 'user_role' })
   roles: Role[];
 
   @Field(() => Profile)
-  @OneToOne(() => Profile, (role) => role.user, { cascade: true })
+  @OneToOne(() => Profile, (profile) => profile.user, { cascade: true })
   @JoinColumn()
   profile: Profile;
 

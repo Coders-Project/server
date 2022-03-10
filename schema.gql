@@ -25,12 +25,16 @@ scalar DateTime
 type Profile {
   displayname: String
   bio: String
+  profilePicture: String
+  backroundPicture: String
   user: User!
 }
 
 type ProfileWithoutUser {
   displayname: String
   bio: String
+  profilePicture: String
+  backroundPicture: String
 }
 
 type RoleWithoutUser {
@@ -50,7 +54,7 @@ type LoginOutput {
 
 type Query {
   users(input: FindAllUserInput): FindAllUserOutput!
-  user(id: Int!): User!
+  user(username: String!): User!
   me: User!
   login(input: LoginInput!): LoginOutput!
   rememberMe: LoginOutput!
@@ -67,24 +71,25 @@ input LoginInput {
 }
 
 type Mutation {
-  updateUser(update: UpdateUserInput!): User!
+  updateSelf(update: UpdateUserInput, profilePictureFile: Upload, backgroundPictureFile: Upload): User!
   createUser(input: CreateUserInput!): LoginOutput!
 }
 
 input UpdateUserInput {
-  user: SubUpdateUserInput
-  profile: SubUpdateProfileInput
-}
-
-input SubUpdateUserInput {
   username: String
   email: String
+  profile: SubUpdateProfileInput
 }
 
 input SubUpdateProfileInput {
   displayname: String
   bio: String
+  profilePicture: String
+  backroundPicture: String
 }
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload
 
 input CreateUserInput {
   username: String!

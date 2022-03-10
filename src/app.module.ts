@@ -3,7 +3,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { join } from 'path';
 import { Connection } from 'typeorm';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGard } from './auth/guards/jwt.guard';
@@ -11,9 +13,11 @@ import { RolesGuard } from './auth/guards/role.guard';
 import { ProfileModule } from './profile/profile.module';
 import { RoleModule } from './role/role.module';
 import { UserModule } from './user/user.module';
-
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'static'),
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),

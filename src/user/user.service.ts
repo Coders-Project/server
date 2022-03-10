@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import { UserRoles } from '../role/dto/role.enum';
 import { Role } from '../role/entities/role.entity';
 import { Profile } from './../profile/entites/profile.entity';
@@ -30,6 +30,7 @@ export class UserService {
     });
 
     const profile = this.profileRepository.create();
+    profile.displayname = createuserInput.username;
     await this.profileRepository.save(profile);
     user.profile = profile;
 
@@ -77,8 +78,8 @@ export class UserService {
     return user.profile;
   }
 
-  async findOne(id: number) {
-    return this.usersRepository.findOne(id);
+  async findOne(options: FindOneOptions<User>) {
+    return this.usersRepository.findOne(options);
   }
 
   async update(userId: number, updateInput: UpdateUserInput) {
@@ -86,15 +87,29 @@ export class UserService {
       relations: ['profile'],
     });
 
-    user.profile = Object.assign(user.profile, updateInput.profile);
+    const filter = (object) => {
+      for (const key in object) {
+        if (object[key] === null) {
+          delete object[key];
+        } else if (typeof object[key] === 'object') {
+          filter(object[key]);
+        }
+      }
+      return object;
+    };
 
-    return (await this.usersRepository.save(
-      Object.assign(user, updateInput.user),
-    )) as User;
-    // te.
-    // return te;
-    // return this.usersRepository.findOne(userId);
+    const newFields = filter(updateInput);
+
+    const profile = Object.assign(user.profile, newFields.profile) as Profile;
+
+    const userUpdated = Object.assign(user, newFields) as User;
+
+    user.profile = profile;
+
+    return userUpdated.save();
   }
+
+  updateProfilePicture() {}
 
   // remove(id: number) {
   //   return `This action removes a #${id} user`;

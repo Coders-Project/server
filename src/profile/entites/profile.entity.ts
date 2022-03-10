@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Length, validateOrReject } from 'class-validator';
 import {
+  BaseEntity,
   BeforeUpdate,
   Column,
   Entity,
@@ -11,7 +12,7 @@ import { User } from '../../user/entities/user.entity';
 
 @ObjectType()
 @Entity()
-export class Profile {
+export class Profile extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -21,13 +22,28 @@ export class Profile {
   displayname: string;
 
   @Field(() => String, { nullable: true })
-  @Column({ nullable: true, length: 300 })
-  @Length(1, 300)
+  @Column({ nullable: true, length: 300, default: '' })
+  @Length(0, 300)
   bio: string;
 
+  @Field(() => String, { nullable: true })
+  @Column({ nullable: true, length: 300, default: '', name: 'profile_picture' })
+  @Length(0, 4096)
+  profilePicture: string;
+
+  @Field(() => String, { nullable: true })
+  @Column({
+    nullable: true,
+    length: 300,
+    default: '',
+    name: 'background_picture',
+  })
+  @Length(0, 4096)
+  backroundPicture: string;
+
   @Field(() => User)
-  @OneToOne(() => User, (profile) => profile.profile)
-  user: number;
+  @OneToOne(() => User, (user) => user.profile)
+  user: User;
 
   //   @BeforeInsert()
   @BeforeUpdate()

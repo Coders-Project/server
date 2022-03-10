@@ -40,7 +40,11 @@ export class AuthResolver {
 
   @Query(() => LoginOutput)
   async rememberMe(@CurrentUser() user: User): Promise<LoginOutput> {
-    const userFind = await this.userService.findOne(user.id);
+    const userFind = await this.userService.findOne({
+      where: {
+        id: user.id,
+      },
+    });
 
     if (!userFind) {
       throw new NotFoundException();
