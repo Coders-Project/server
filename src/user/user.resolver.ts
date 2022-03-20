@@ -1,23 +1,27 @@
 import {
   InternalServerErrorException,
   PayloadTooLargeException,
-  UseGuards,
+  UseGuards
 } from '@nestjs/common';
 import {
   Args,
   Context,
+  Int,
   Mutation,
   Parent,
   Query,
   ResolveField,
   Resolver,
+  Subscription
 } from '@nestjs/graphql';
 import { ExpressContext } from 'apollo-server-express';
+import { PubSub } from 'graphql-subscriptions';
 import { FileUpload, GraphQLUpload } from 'graphql-upload';
-// import { LoginOutput } from '../../graphql/mutations/register/register.generated';
 import { CurrentUser } from '../auth/dto/current-user.decorator';
 import { Public } from '../auth/dto/public.decorator';
 import { FileHandler } from '../helpers/FileHandler';
+import { FindAllPostInput } from '../post/dto/find-all-post.input';
+import { FindAllPostOutput } from '../post/dto/find-all-post.ouput';
 import { ProfileWithoutUser } from '../profile/dto/profile-without-user.input';
 import { Profile } from '../profile/entites/profile.entity';
 import { RoleWithoutUser } from '../role/dto/role-without-user';
@@ -25,13 +29,81 @@ import { Role } from '../role/entities/role.entity';
 import { JwtAuthGard } from './../auth/guards/jwt.guard';
 import { FindAllUserInput } from './dto/findall-user.input';
 import { FindAllUserOutput } from './dto/findall-user.output';
+import { FollowInput } from './dto/follow.input';
+import { FollowMutationOutput } from './dto/follow.mutation.output';
+import { FollowOutput } from './dto/follow.output';
+import { RemoveFollowerOutput } from './dto/remove-follower.output';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from './entities/user.entity';
 import { UserService } from './user.service';
 
+// TODO : Crée un pubsub global et l'injecter dans les contructors
+const pubSub = new PubSub();
+
 @Resolver(() => User)
 export class userResolver {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    // @Inject('PUB_SUB') private pubSub: PubSub,
+    private readonly userService: UserService,
+  ) {}
+
+  @Public()
+  @Subscription(() => FollowMutationOutput, {
+    name: 'follow',
+    resolve: (value) => value.payload,
+  })
+  subscribeToFollow() {
+    // @Context('PUB_SUB') pubSub: PubSub, // ze
+    // return this.pubSub.asyncIterator('follow');
+    return pubSub.asyncIterator('follow');
+  }
+
+  @Mutation(() => FollowMutationOutput)
+  async toggleFollow(
+    @CurrentUser() user: User,
+    @Args({
+      name: 'followingId',
+      type: () => Int,
+    })
+    followingId: number,
+  ): Promise<FollowMutationOutput> {
+    const { follower, following } = await this.userService.toggleFollow(
+      user.id,
+      followingId,
+    );
+
+    pubSub.publish('follow', { payload: { follower, following } });
+
+    return { follower, following };
+  }
+
+  // @Mutation(() => FollowMutationOutput)
+  @Mutation(() => RemoveFollowerOutput)
+  async removeFollower(
+    @CurrentUser() user: User,
+    @Args({
+      name: 'followerId',
+      type: () => Int,
+    })
+    followerId: number,
+    // ): Promise<FollowMutationOutput> {
+  ): Promise<RemoveFollowerOutput> {
+    // const { follower, following } = await this.userService.deleteFollower(
+    // const _user = await this.userService.deleteFollower(followerId, user.id);
+    await this.userService.deleteFollower(followerId, user.id);
+
+    return { userId: followerId };
+  }
+
+  @Query(() => Boolean, { name: 'isFollow' })
+  async getIsFollow(
+    @Parent() user: User,
+    @Args('followerId', { type: () => Int }) followerId: number,
+    @Args('followingId', { type: () => Int }) followingId: number,
+  ): Promise<boolean> {
+    const isFollow = await this.userService.isFollow(followerId, followingId);
+    return Boolean(isFollow);
+  }
 
   @Query(() => FindAllUserOutput, { name: 'users' })
   async findAll(
@@ -40,19 +112,20 @@ export class userResolver {
     return this.userService.findAll(input?.take, input?.page);
   }
 
+  // TODO : Recuperer quand meme l'user meme si fonction est publique
   @Public()
   @Query(() => User, { name: 'user' })
-  findByUsername(
+  async findByUsername(
     @CurrentUser() user: User,
     @Args('username', { type: () => String }) username: string,
   ): Promise<User> {
-    console.log('Current user : ', user);
-
-    return this.userService.findOne({
+    const userFound = await this.userService.findOne({
       where: {
         username: username,
       },
     });
+
+    return userFound;
   }
 
   @UseGuards(JwtAuthGard)
@@ -62,10 +135,11 @@ export class userResolver {
       where: {
         id: user.id,
       },
+      // ! TODO: Attention aux relations
+      relations: ['followers', 'followings'],
     });
   }
 
-  //! penser a enlever le @Public
   @UseGuards(JwtAuthGard)
   @Mutation(() => User)
   async updateSelf(
@@ -96,7 +170,6 @@ export class userResolver {
         );
         updateInput.profile.profilePicture = result.uploadPath;
       }
-
       if (backgroundPictureFile) {
         const result = await FileHandler.upload(
           backgroundPictureFile,
@@ -118,12 +191,50 @@ export class userResolver {
     return this.userService.update(user.id, updateInput);
   }
 
+  @ResolveField(() => FollowOutput, { name: 'followers' })
+  // async getFollowers(@Parent() user: User): Promise<User['followers']> {
+  async getFollowers(
+    @Parent() user: User,
+    @Args({ name: 'input', type: () => FollowInput, nullable: true })
+    input: FollowInput,
+  ) {
+    const _input = input || {};
+    return this.userService.getFollowers(user.id, _input.take, _input.page);
+  }
+
+  @ResolveField(() => FollowOutput, { name: 'followings' })
+  // async getFollowings(@Parent() user: User): Promise<User['followings']> {
+  async getFollowings(
+    @Parent() user: User,
+    @Args({ name: 'input', type: () => FollowInput, nullable: true })
+    input: FollowInput,
+  ) {
+    const _input = input || {};
+    return this.userService.getFollowings(user.id, _input.take, _input.page);
+  }
+
   @ResolveField(() => [RoleWithoutUser], { name: 'roles' })
   getRole(@Parent() user: User): Promise<Role[]> {
     return this.userService.getRole(user.id);
   }
 
-  @ResolveField(() => ProfileWithoutUser, { name: 'profile' })
+  @ResolveField(() => FindAllPostOutput, {
+    name: 'posts',
+    description: 'Get user post',
+  })
+  getPosts(
+    @Parent() user: User,
+    @Args({ name: 'input', type: () => FollowInput, nullable: true })
+    input: FindAllPostInput,
+  ): Promise<Role[]> {
+    const _input = input || {};
+    return this.userService.getPosts(user.id, _input.take, _input.page);
+  }
+
+  @ResolveField(() => ProfileWithoutUser, {
+    name: 'profile',
+    description: 'Get user profile',
+  })
   async getProfile(
     @Parent() user: User,
     @Context() ctx: ExpressContext,

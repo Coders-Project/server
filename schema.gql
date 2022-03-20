@@ -2,6 +2,36 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type PostMedia {
+  id: Int!
+  path: String!
+  post: Post!
+}
+
+type Post {
+  id: Int!
+  body: String
+  postParentId: Int
+  isFollowOnly: Boolean
+  createdAt: DateTime!
+  user: User!
+  medias: [PostMedia!]!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Profile {
+  id: Int!
+  displayname: String
+  bio: String
+  profilePicture: String
+  backroundPicture: String
+  user: User!
+}
+
 type Role {
   level: String!
   label: String!
@@ -14,23 +44,29 @@ type User {
   email: String!
   createdAt: DateTime!
   roles: [RoleWithoutUser!]!
+
+  """Get user profile"""
   profile: ProfileWithoutUser!
+  followers(input: FollowInput): FollowOutput!
+  followings(input: FollowInput): FollowOutput!
+
+  """Get user post"""
+  posts(input: FollowInput): FindAllPostOutput!
+  isFollow: Boolean!
 }
 
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
+input FollowInput {
+  page: Int
+  take: Int
+}
 
-type Profile {
-  displayname: String
-  bio: String
-  profilePicture: String
-  backroundPicture: String
-  user: User!
+type FindAllPostOutput {
+  total: Int!
+  list: [Post!]!
 }
 
 type ProfileWithoutUser {
+  id: Int!
   displayname: String
   bio: String
   profilePicture: String
@@ -47,17 +83,34 @@ type FindAllUserOutput {
   users: [User!]!
 }
 
+type FollowMutationOutput {
+  follower: User!
+  following: User!
+}
+
+type FollowOutput {
+  total: Int!
+  list: [User!]!
+}
+
+type RemoveFollowerOutput {
+  userId: Int!
+}
+
 type LoginOutput {
   accessToken: String!
   user: User!
 }
 
 type Query {
+  isFollow(followerId: Int!, followingId: Int!): Boolean!
   users(input: FindAllUserInput): FindAllUserOutput!
   user(username: String!): User!
   me: User!
   login(input: LoginInput!): LoginOutput!
   rememberMe: LoginOutput!
+  post(id: Int!): Post!
+  postMedia(id: Int!): PostMedia!
 }
 
 input FindAllUserInput {
@@ -71,13 +124,22 @@ input LoginInput {
 }
 
 type Mutation {
+  toggleFollow(followingId: Int!): FollowMutationOutput!
+  removeFollower(followerId: Int!): RemoveFollowerOutput!
   updateSelf(update: UpdateUserInput, profilePictureFile: Upload, backgroundPictureFile: Upload): User!
   createUser(input: CreateUserInput!): LoginOutput!
+  createPost(input: CreatePostInput, medias: [Upload!]): Post!
+  updatePost(updatePostInput: UpdatePostInput!): Post!
+  removePost(id: Int!): Post!
+  createPostMedia(createPostMediaInput: CreatePostMediaInput!): PostMedia!
+  updatePostMedia(updatePostMediaInput: UpdatePostMediaInput!): PostMedia!
+  removePostMedia(id: Int!): PostMedia!
 }
 
 input UpdateUserInput {
   username: String
   email: String
+  isFollow: Boolean
   profile: SubUpdateProfileInput
 }
 
@@ -95,4 +157,32 @@ input CreateUserInput {
   username: String!
   email: String!
   password: String!
+}
+
+input CreatePostInput {
+  body: String
+  postParentId: Int
+  isFollowOnly: Boolean
+}
+
+input UpdatePostInput {
+  body: String
+  postParentId: Int
+  isFollowOnly: Boolean
+  id: Int!
+}
+
+input CreatePostMediaInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input UpdatePostMediaInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
+}
+
+type Subscription {
+  follow: FollowMutationOutput!
 }

@@ -4,6 +4,8 @@ import { UserRoles } from '../../role/dto/role.enum';
 import { Role } from '../../role/entities/role.entity';
 import { User } from '../../user/entities/user.entity';
 
+let id = 0;
+
 define(
   User,
   (
@@ -12,7 +14,7 @@ define(
   ) => {
     const user = new User();
 
-    user.username = context?.username || faker.name.firstName();
+    user.username = `${context?.username || faker.name.firstName()}${id++}`;
     user.email = context?.email || faker.internet.email();
 
     if (context?.role) {

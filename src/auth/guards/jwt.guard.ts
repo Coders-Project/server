@@ -16,15 +16,23 @@ export class JwtAuthGard extends AuthGuard('jwt') {
   ): boolean | Promise<boolean> | Observable<boolean> {
     // On recupere la metadonnée du décorateur -> @Public()
     // Si public alors un user non authentifié peut accéder a la ressource
+    const ctx = GqlExecutionContext.create(context);
+
+    // On verifie si l'utilisateur a un token
+    const hasToken = Boolean(ctx.getContext().req?.headers?.authorization);
+
+    // Si la ressource est publique et que pas de token on lui donne l'accés en que user non connecté
     if (
       this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
         context.getHandler(),
         context.getClass(),
-      ])
+      ]) &&
+      !hasToken
     ) {
       return true;
     }
 
+    // Sinon : si publique et token on lui donne accés en tant que user connecté
     // Sinon on passe le relai au garde suivant
     return super.canActivate(context);
   }
