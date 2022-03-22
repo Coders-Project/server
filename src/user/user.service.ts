@@ -195,12 +195,17 @@ export class UserService {
 
     console.log('User for posts', user);
 
-    const result = await this.postRepository.findAndCount({
+    let result = await this.postRepository.findAndCount({
       where: {
         user: user,
       },
       take: _take,
       skip: _page,
+    });
+
+    result[0] = result[0].map((post) => {
+      post.draftRaw = JSON.stringify(post.draftRaw);
+      return post;
     });
 
     console.log('Posts', result);

@@ -17,6 +17,9 @@ import { RoleModule } from './role/role.module';
 import { UserModule } from './user/user.module';
 import { PostModule } from './post/post.module';
 import { PostMediaModule } from './post-media/post-media.module';
+import { PostTagModule } from './post-tag/post-tag.module';
+import { TagModule } from './tag/tag.module';
+import { PostMentionModule } from './post-mention/post-mention.module';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
@@ -55,6 +58,9 @@ import { PostMediaModule } from './post-media/post-media.module';
     ProfileModule,
     PostModule,
     PostMediaModule,
+    PostTagModule,
+    TagModule,
+    PostMentionModule,
   ],
   // On instancie ici les guards qui vont être appelés avant chaque requete
   // -> Authentication Guard (verifie si un user est authentifié)

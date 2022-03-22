@@ -1,18 +1,21 @@
 import { BadRequestException } from '@nestjs/common';
 import {
   Args,
+  Context,
   Int,
   Mutation,
   Parent,
   Query,
   ResolveField,
-  Resolver,
+  Resolver
 } from '@nestjs/graphql';
+import { ExpressContext } from 'apollo-server-express';
 import { FileUpload, GraphQLUpload } from 'graphql-upload';
 import { CurrentUser } from 'src/auth/dto/current-user.decorator';
 import { FileHandler } from '../helpers/FileHandler';
 import { PostMedia } from '../post-media/entities/post-media.entity';
 import { User } from '../user/entities/user.entity';
+import { UserService } from '../user/user.service';
 import { CreatePostInput } from './dto/create-post.input';
 import { UpdatePostInput } from './dto/update-post.input';
 import { Post } from './entities/post.entity';
@@ -20,7 +23,10 @@ import { PostService } from './post.service';
 
 @Resolver(() => Post)
 export class PostResolver {
-  constructor(private readonly postService: PostService) {}
+  constructor(
+    private readonly postService: PostService,
+    private readonly userService: UserService,
+  ) {}
 
   // ! Enlever @Public()
   // @Public()
@@ -41,7 +47,7 @@ export class PostResolver {
     /**
      * On crée le post
      */
-    if (medias.length === 0 && !createPostInput.body) {
+    if (medias.length === 0 && !createPostInput.draftRaw) {
       return new BadRequestException('We need at least one media or body');
     }
 
@@ -55,9 +61,37 @@ export class PostResolver {
   }
 
   @ResolveField(() => [PostMedia], { name: 'medias' })
-  getRole(@Parent() post: Post): Promise<PostMedia[]> {
-    return this.postService.getMedias(post.id);
+  async getMedias(
+    @Parent() post: Post,
+    @Context() ctx: ExpressContext,
+  ): Promise<PostMedia[]> {
+    const medias = await this.postService.getMedias(post.id);
+
+    medias.forEach((m) => {
+      m.path = FileHandler.getStaticPath(ctx, m.path);
+    });
+
+    return medias;
   }
+
+  @ResolveField(() => User, { name: 'author' })
+  getUser(@Parent() post: Post): Promise<User> {
+    console.log(post);
+    return this.postService.findPostAuthor(post.id);
+  }
+
+  @Query(() => [Post], { name: 'feed' })
+  // getFeed(@CurrentUser() user: User): Promise<Post[]> {
+  async getFeed(@CurrentUser() user: User) {
+    // return this.postService.getFeeds(user.id);
+    // return this.postService.getFeeds(user.id);
+    return (await this.postService.getFeeds(user.id)).posts;
+  }
+
+  // @ResolveField(() => [PostMedia], { name: 'medias' })
+  // getRole(@Parent() post: Post): Promise<PostMedia[]> {
+  //   return this.postService.getMedias(post.id);
+  // }
 
   @Query(() => [Post], { name: 'post' })
   findAll() {

@@ -4,7 +4,8 @@ import { Post } from '../entities/post.entity';
 @InputType()
 export class CreatePostInput extends PickType(
   Post,
-  ['body', 'postParentId', 'isFollowOnly'],
+  // ['body', 'raw', 'postParentId', 'isFollowOnly'],
+  ['draftRaw', 'postParentId', 'isFollowOnly'],
   InputType,
 ) {
   // @Field(() => Int)

@@ -1,10 +1,12 @@
-import { UserRoles } from 'src/role/dto/role.enum';
+import faker from '@faker-js/faker';
 import { Connection } from 'typeorm';
 import { Factory, Seeder } from 'typeorm-seeding';
 import { Follow } from '../../follower/entities/follower.entity';
+import stateFromHTML from '../../helpers/helpers';
+import { Post } from '../../post/entities/post.entity';
 import { Profile } from '../../profile/entites/profile.entity';
+import { UserRoles } from '../../role/dto/role.enum';
 import { User } from './../../user/entities/user.entity';
-
 export default class CreateUser implements Seeder {
   public async run(factory: Factory, connection: Connection): Promise<any> {
     await connection.getRepository(User).delete({});
@@ -23,7 +25,6 @@ export default class CreateUser implements Seeder {
         return user;
       })
       .create();
-
     // await test.save();
     const moderator = await factory(User)({
       username: 'moderator',
@@ -55,44 +56,90 @@ export default class CreateUser implements Seeder {
         return user;
       })
       // .createMany(500);
-      .createMany(100);
+      // .createMany(100);
+      .createMany(20);
 
     const all = [admin, moderator, user, ...randomUsers];
 
-    // Création des relations entre les utilisateurs
     for (const userI of all) {
       await userI.reload();
-      for (const userJ of all) {
-        const random = Math.random();
-        const random2 = Math.random();
-        await userJ.reload();
-        if (userJ.id === userI.id) break;
 
+      this.generatePost(userI, connection);
+
+      for (const userJ of all) {
         try {
-          if (random < 0.5) {
-            await connection
-              .getRepository(Follow)
-              .insert({ followerId: userJ.id, followingId: userI.id });
-          }
-          if (random2 < 0.5) {
-            await connection
-              .getRepository(Follow)
-              .insert({ followerId: userI.id, followingId: userJ.id });
-          }
+          await this.generateRelations(userI, userJ, connection);
         } catch {
           continue;
         }
       }
     }
-    // all.forEach(u => {
-    //           await connection
-    //     .getRepository(Follow)
-    //     .insert({ followerId: 2, followingId: 3 });
-    // })
-
-    // all.forEach(async (user) => {
-    //   await connection.getRepository(User).save(user);
-    // }
-    // );
   }
+  /**
+   * Generate user post
+   * @param user
+   * @param connection
+   */
+  generatePost = async (user: User, connection) => {
+    // prettier-ignore
+    const emojis = ["✌","😂","😝","😁","😱","👉","🙌","🍻","🔥","🌈","☀","🎈","🌹","💄","🎀","⚽","🎾","🏁","😡","👿","🐻","🐶","🐬","🐟","🍀","👀","🚗","🍎","💝","💙","👌","❤","😍","😉","😓","😳","💪","💩","🍸","🔑","💖","🌟","🎉","🌺","🎶","👠","🏈","⚾","🏆","👽","💀","🐵","🐮","🐩","🐎","💣","👃","👂","🍓","💘","💜","👊","💋","😘","😜","😵","🙏","👋","🚽","💃","💎","🚀","🌙","🎁","⛄","🌊","⛵","🏀","🎱","💰","👶","👸","🐰","🐷","🐍","🐫","🔫","👄","🚲","🍉","💛","💚"]
+
+    let postCount = faker.datatype.number({
+      min: 3,
+      max: 10,
+    });
+
+    for (let i = 0; i < postCount; i++) {
+      let content = '';
+
+      let linesCount = faker.datatype.number({
+        min: 1,
+        max: 5,
+      });
+
+      for (let i = 0; i < linesCount; i++) {
+        const randomEmojisCount = faker.datatype.number({
+          min: -2,
+          max: 3,
+        });
+        const randomSentenceWords = faker.datatype.number({
+          min: 1,
+          max: 10,
+        });
+        const randomEmojis = faker.random.arrayElements(
+          emojis,
+          randomEmojisCount,
+        );
+        content += `<p>${faker.lorem.sentence(
+          randomSentenceWords,
+        )} ${randomEmojis.join('')}<p>`;
+      }
+
+      await connection.getRepository(Post).insert({
+        user: user,
+        draftRaw: JSON.stringify(stateFromHTML(content)),
+      });
+    }
+  };
+
+  generateRelations = async (follower, following, connection) => {
+    const random = Math.random();
+    const random2 = Math.random();
+
+    await follower.reload();
+
+    if (follower.id === following.id) return;
+
+    // Création des relations entre les utilisateurs
+    if (random < 0.5) {
+      await connection
+        .getRepository(Follow)
+        .insert({ followerId: follower.id, followingId: following.id });
+    }
+    if (random2 < 0.5) {
+      await connection
+        .getRepository(Follow)
+        .insert({ followerId: following.id, followingId: follower.id });
+    }
+  };
 }
