@@ -13,7 +13,9 @@ async function bootstrap() {
   // ! Utiliser une antivirus qui verifie les fichiers reçu
 
   // Middleware qui permet d'upload des fichiers avec graphql
-  app.use(graphqlUploadExpress({ maxFileSize: 2_000_000 }));
+  // TODO : Revoir la taille max des fichiers
+  // app.use(graphqlUploadExpress({ maxFileSize: 2_000_000 }));
+  app.use(graphqlUploadExpress());
 
   // Middleware qui permet la validation de données
   app.useGlobalPipes(new ValidationPipe());

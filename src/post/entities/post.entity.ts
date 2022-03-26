@@ -13,6 +13,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { PostMedia } from '../../post-media/entities/post-media.entity';
+import { PostReport } from '../../post-report/entity/post-report.entity';
 import { User } from '../../user/entities/user.entity';
 
 @ObjectType('Post')
@@ -55,6 +56,12 @@ export class Post extends BaseEntity {
     cascade: true,
   })
   medias: PostMedia[];
+
+  @Field(() => PostReport)
+  @OneToMany((type) => PostReport, (postReport) => postReport.post, {
+    cascade: true,
+  })
+  reports: PostReport[];
 
   @BeforeUpdate()
   @BeforeInsert()

@@ -54,7 +54,6 @@ export class userResolver {
   })
   subscribeToFollow() {
     // @Context('PUB_SUB') pubSub: PubSub, // ze
-    // return this.pubSub.asyncIterator('follow');
     return pubSub.asyncIterator('follow');
   }
 
@@ -224,11 +223,16 @@ export class userResolver {
   })
   getPosts(
     @Parent() user: User,
-    @Args({ name: 'input', type: () => FollowInput, nullable: true })
+    @Args({ name: 'input', type: () => FindAllPostInput, nullable: true })
     input: FindAllPostInput,
   ): Promise<Role[]> {
     const _input = input || {};
-    return this.userService.getPosts(user.id, _input.take, _input.page);
+    return this.userService.getPosts(
+      user.id,
+      _input.take,
+      _input.page,
+      _input.options,
+    );
   }
 
   @ResolveField(() => ProfileWithoutUser, {

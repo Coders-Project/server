@@ -12,7 +12,7 @@
     "seed:run": "npm run schema:drop && ts-node ./node_modules/typeorm-seeding/dist/cli.js seed",
     "schema:drop": "ts-node ./node_modules/typeorm/cli.js schema:drop",
     "schema:sync": "ts-node ./node_modules/typeorm/cli.js schema:sync",
-    "schema:reload": "npm run schema:drop && npm run schema:sync && npm run seed:run",
+    "schema:reload": "npm run schema:drop && npm run build && npm run schema:sync && npm run seed:run",
     "prebuild": "rimraf dist",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

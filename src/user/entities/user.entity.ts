@@ -72,12 +72,20 @@ export class User extends BaseEntity {
   @JoinColumn()
   profile: Profile;
 
-  @Field(() => User)
-  @OneToMany((type) => Follow, (user) => user.follower, { cascade: true })
-  followers: User[];
+  // @Field(() => User)
+  // @OneToMany((type) => Follow, (user) => user.follower, { cascade: true })
+  // followers: User[];
+
+  // @Field(() => User)
+  // @OneToMany((type) => Follow, (user) => user.following, { cascade: true })
+  // followings: User[];
 
   @Field(() => User)
   @OneToMany((type) => Follow, (user) => user.following, { cascade: true })
+  followers: User[];
+
+  @Field(() => User)
+  @OneToMany((type) => Follow, (user) => user.user, { cascade: true })
   followings: User[];
 
   @Field(() => Post)

@@ -12,14 +12,15 @@ import { Connection } from 'typeorm';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGard } from './auth/guards/jwt.guard';
 import { RolesGuard } from './auth/guards/role.guard';
+import { PostMediaModule } from './post-media/post-media.module';
+import { PostMentionModule } from './post-mention/post-mention.module';
+import { PostTagModule } from './post-tag/post-tag.module';
+import { PostModule } from './post/post.module';
 import { ProfileModule } from './profile/profile.module';
 import { RoleModule } from './role/role.module';
-import { UserModule } from './user/user.module';
-import { PostModule } from './post/post.module';
-import { PostMediaModule } from './post-media/post-media.module';
-import { PostTagModule } from './post-tag/post-tag.module';
 import { TagModule } from './tag/tag.module';
-import { PostMentionModule } from './post-mention/post-mention.module';
+import { UserModule } from './user/user.module';
+import { PostReportModule } from './post-report/post-report.module';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
@@ -61,6 +62,7 @@ import { PostMentionModule } from './post-mention/post-mention.module';
     PostTagModule,
     TagModule,
     PostMentionModule,
+    PostReportModule,
   ],
   // On instancie ici les guards qui vont être appelés avant chaque requete
   // -> Authentication Guard (verifie si un user est authentifié)

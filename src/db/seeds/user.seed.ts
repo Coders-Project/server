@@ -130,16 +130,25 @@ export default class CreateUser implements Seeder {
 
     if (follower.id === following.id) return;
 
-    // Création des relations entre les utilisateurs
-    if (random < 0.5) {
-      await connection
-        .getRepository(Follow)
-        .insert({ followerId: follower.id, followingId: following.id });
-    }
-    if (random2 < 0.5) {
-      await connection
-        .getRepository(Follow)
-        .insert({ followerId: following.id, followingId: follower.id });
+    try {
+      // Création des relations entre les utilisateurs
+      if (random < 0.5) {
+        await connection
+          .getRepository(Follow)
+          // .insert({ followerId: follower.id, followingId: following.id });
+          // .insert({ follower: follower, following: following });
+          .insert({ user: follower, following: following });
+      }
+
+      if (random2 < 0.5) {
+        await connection
+          .getRepository(Follow)
+          // .insert({ followerId: following.id, followingId: follower.id });
+          .insert({ user: following, following: follower });
+      }
+    } catch {
+      // return
+      throw new Error('SEED : Relation already exists');
     }
   };
 }

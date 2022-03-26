@@ -1,13 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { PostMedia } from '../post-media/entities/post-media.entity';
 import { PostMention } from '../post-mention/entities/post-mention.entity';
+import { PostReport } from '../post-report/entity/post-report.entity';
 import { PostTag } from '../post-tag/entities/post-tag.entity';
 import { Tag } from '../tag/entities/tag.entity';
 import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
 import { CreatePostInput } from './dto/create-post.input';
+import { FeedOptions } from './dto/feed.input';
+import { GetPostReportsInput } from './dto/get-post-reports.input';
 import { UpdatePostInput } from './dto/update-post.input';
 import { Post } from './entities/post.entity';
 
@@ -18,6 +21,8 @@ export class PostService {
     @InjectRepository(Post) private readonly postRepository: Repository<Post>,
     @InjectRepository(PostMedia)
     private readonly postMediaRepository: Repository<PostMedia>,
+    @InjectRepository(PostReport)
+    private readonly postReportRepository: Repository<PostReport>,
   ) {}
 
   async create(
@@ -60,6 +65,49 @@ export class PostService {
     return post.save();
   }
 
+  async updateMedias(
+    newMediasPath: string[],
+    updatePostInput: UpdatePostInput,
+  ) {
+    const post = await this.postRepository.findOne(updatePostInput.id, {
+      relations: ['medias'],
+    });
+
+    // Retirer toutes propriétés nulles
+    // A placer dans les helpers
+    const filter = <T>(object): T => {
+      for (const key in object) {
+        if (object[key] === null) {
+          delete object[key];
+        } else if (typeof object[key] === 'object') {
+          filter(object[key]);
+        }
+      }
+      return object;
+    };
+
+    const newFields = filter<UpdatePostInput>(updatePostInput);
+
+    // On ajoute les nouveaux medias
+    for (const path of newMediasPath) {
+      const postMedia = new PostMedia();
+      postMedia.path = path;
+      postMedia.post = post;
+      post.medias = [...(post.medias || []), postMedia];
+    }
+
+    // On remplace les property qui sont mise a jour
+    const postUpdated = Object.assign(post, newFields) as Post;
+    await postUpdated.save();
+
+    // On supprime les medias qui ne sont plus dans le post
+    if (updatePostInput.mediasRemovedIds.length > 0) {
+      await this.postMediaRepository.delete(updatePostInput.mediasRemovedIds);
+    }
+
+    return postUpdated;
+  }
+
   async getMedias(postId: number) {
     const post = await this.findOne(postId);
     return this.postMediaRepository.find({ where: { post } });
@@ -73,33 +121,88 @@ export class PostService {
     return post.user;
   }
 
-  async getFeeds(userId: number) {
-    const user = await this.userService.findOne({
-      where: {
-        id: userId,
-      },
-      relations: ['followings', 'followers'],
-    });
+  async getFeeds(
+    user: User,
+    take?: number,
+    page?: number,
+    options: FeedOptions = {},
+  ) {
+    // const _options = options || {};
+    const _take = take || 10;
+    const _page = page ? page * _take : 0;
 
-    const followings = user.followings;
+    let idQuery;
+    let followings = [];
 
-    // TODO : Refaire les Follow (car mal fait)
-    console.log('FEEDS : ', user);
+    if (user) {
+      followings = (await this.userService.getFollowings(user.id)).list;
+      followings.unshift(user);
+    }
 
+    if (options.excludeFollowing) {
+      idQuery = Not(In(followings.map((f) => f.id)));
+    } else {
+      idQuery = In(followings.map((f) => f.id));
+    }
+
+    // NOTE : trop de boucle a optimiser...
     const posts = await this.postRepository.findAndCount({
       where: {
-        user: In(followings),
+        user: {
+          id: idQuery,
+        },
       },
+      order: {
+        createdAt: 'DESC',
+      },
+      take: _take,
+      skip: _page,
     });
+
+    posts[0].forEach((post) => (post.draftRaw = JSON.stringify(post.draftRaw)));
 
     return {
       total: posts[1],
-      posts: posts[0],
+      list: posts[0],
     };
   }
 
-  findAll() {
-    return `This action returns all post`;
+  async getReports(post: Post, input: GetPostReportsInput) {
+    const _input = input || {};
+    // const _options = options || {};
+    const _take = _input.take || 10;
+    const _page = _input.page ? _input.page * _take : 0;
+
+    const posts = await this.postReportRepository.findAndCount({
+      where: {
+        post: post,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+      take: _take,
+      skip: _page,
+    });
+
+    console.log(posts);
+
+    // const posts = await this.postRepository.findAndCount({
+    //   order: {
+    //     createdAt: 'DESC',
+    //   },
+    //   take: _take,
+    //   skip: _page,
+    //   relations: ['reports'],
+    // });
+
+    return {
+      total: posts[1],
+      list: posts[0],
+    };
+  }
+
+  findAll(id: number) {
+    return this.postRepository.findOne(id);
   }
 
   findOne(id: number) {

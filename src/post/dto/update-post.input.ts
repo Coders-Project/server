@@ -1,8 +1,21 @@
-import { Field, InputType, Int, PartialType } from '@nestjs/graphql';
-import { CreatePostInput } from './create-post.input';
+import { Field, InputType, Int, PickType } from '@nestjs/graphql';
+import { Post } from '../entities/post.entity';
 
 @InputType()
-export class UpdatePostInput extends PartialType(CreatePostInput, InputType) {
+export class MediasInput {
   @Field(() => Int)
   id: number;
+
+  @Field(() => Int)
+  path: number;
+}
+@InputType()
+export class UpdatePostInput extends PickType(
+  Post,
+  // ['body', 'raw', 'postParentId', 'isFollowOnly'],
+  ['id', 'draftRaw', 'postParentId', 'isFollowOnly'],
+  InputType,
+) {
+  @Field(() => [Int], { nullable: true })
+  mediasRemovedIds?: number[];
 }

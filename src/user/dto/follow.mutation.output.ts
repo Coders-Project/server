@@ -5,6 +5,8 @@ import { User } from '../entities/user.entity';
 export class FollowMutationOutput {
   @Field(() => User)
   follower: User;
+  // @Field(() => User)
+  // user: User;
 
   @Field(() => User)
   following: User;

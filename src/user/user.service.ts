@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, FindOneOptions, Repository } from 'typeorm';
 import { Follow } from '../follower/entities/follower.entity';
+import { FindAllPostOptions } from '../post/dto/find-all-post.input';
 import { UserRoles } from '../role/dto/role.enum';
 import { Role } from '../role/entities/role.entity';
 import { Post } from './../post/entities/post.entity';
@@ -102,6 +103,8 @@ export class UserService {
       relations: ['profile'],
     });
 
+    // Retirer toutes propriétés nulles
+    // A placer dans les helpers
     const filter = (object) => {
       for (const key in object) {
         if (object[key] === null) {
@@ -128,39 +131,45 @@ export class UserService {
     // Empeche de se follow soi-meme
     if (followerId === followingId) throw new BadRequestException();
 
-    const follower = await this.usersRepository.findOne(followerId);
+    const user = await this.usersRepository.findOne(followerId);
     const following = await this.usersRepository.findOne(followingId);
 
     const isCurrentFollow = await this.isFollow(followerId, followingId);
+
+    console.log('toggleFollow -> followerId : ', user);
+    console.log('toggleFollow -> followingId : ', following);
+    console.log('isCurrentFollow', isCurrentFollow);
 
     if (isCurrentFollow) {
       await this.followRepository.delete(isCurrentFollow);
     } else {
       const follow = new Follow();
-      follow.follower = follower;
+      follow.user = user;
       follow.following = following;
       await follow.save();
     }
 
-    return { follower, following };
+    return { follower: user, following };
   }
 
   async getFollowers(userId: number, take?: number, page?: number) {
     const _take = take || 10;
     const _page = page ? page * _take : 0;
 
+    const following = await this.usersRepository.findOne(userId);
+
     const result = await this.followRepository.findAndCount({
       where: {
-        followingId: userId,
+        following: following,
       },
       take: _take,
       skip: _page,
-      relations: ['follower'],
+      relations: ['user'],
     });
 
     return {
       total: result[1],
-      list: result[0].map((r) => r.follower),
+      list: result[0].map((r) => r.user),
     };
   }
 
@@ -172,14 +181,17 @@ export class UserService {
     const _take = take || 10;
     const _page = page ? page * _take : 0;
 
+    const follower = await this.usersRepository.findOne(userId);
     const result = await this.followRepository.findAndCount({
       where: {
-        followerId: userId,
+        user: follower,
       },
       take: _take,
       skip: _page,
       relations: ['following'],
     });
+
+    // console.log(result[0]);
 
     return {
       total: result[1],
@@ -187,13 +199,38 @@ export class UserService {
     };
   }
 
-  async getPosts(userId: number, take?: number, page?: number): Promise<any> {
+  async getPosts(
+    userId: number,
+    take?: number,
+    page?: number,
+    options?: FindAllPostOptions,
+  ): Promise<any> {
+    const _options = options || {};
     const _take = take || 10;
     const _page = page ? page * _take : 0;
 
-    const user = await this.findOne({ where: { id: userId } });
+    if (_options.onlyWithMedia) {
+      const user = await this.findOne({ where: { id: userId } });
 
-    console.log('User for posts', user);
+      let result = await this.postRepository
+        .createQueryBuilder('post')
+        .leftJoinAndSelect('post.media', 'media')
+        .where('counter(post.media) > 0')
+        .andWhere('post.user = :user', { user })
+        .getManyAndCount();
+
+      result[0] = result[0].map((post) => {
+        post.draftRaw = JSON.stringify(post.draftRaw);
+        return post;
+      });
+
+      return {
+        total: result[1],
+        list: result[0],
+      };
+    }
+
+    const user = await this.findOne({ where: { id: userId } });
 
     let result = await this.postRepository.findAndCount({
       where: {
@@ -201,6 +238,9 @@ export class UserService {
       },
       take: _take,
       skip: _page,
+      order: {
+        createdAt: 'DESC',
+      },
     });
 
     result[0] = result[0].map((post) => {
@@ -208,33 +248,41 @@ export class UserService {
       return post;
     });
 
-    console.log('Posts', result);
-
     return {
       total: result[1],
       list: result[0],
     };
   }
 
-  isFollow(followerId: number, followingId: number) {
-    return this.followRepository.findOne({
+  async isFollow(followerId: number, followingId: number) {
+    const user = await this.usersRepository.findOne(followerId);
+    const following = await this.usersRepository.findOne(followingId);
+
+    // TODO : Essayer sans use les ids
+    // TODO : Faire el feed
+    const relation = await this.followRepository.findOne({
       where: {
-        followerId: followerId,
+        userId: followerId,
         followingId: followingId,
       },
     });
+
+    console.log('Relation : ', relation);
+
+    return relation;
   }
 
   async deleteFollower(followerId: number, followingId: number) {
+    const follower = await this.usersRepository.findOne(followerId);
+    const following = await this.usersRepository.findOne(followingId);
+
     await this.followRepository.delete({
-      followerId: followerId,
-      followingId: followingId,
+      user: follower,
+      following: following,
     });
   }
 
-  // getFollowers (user) {
-
-  // }
+  // getFollowers(user) {}
   // remove(id: number) {
   //   return `This action removes a #${id} user`;
   // }

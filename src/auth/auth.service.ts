@@ -23,7 +23,6 @@ export class AuthService {
     return user;
   }
 
-  // login(user: User) {
   login(user: User) {
     const payload: JwtPayload = { userID: user.id };
     return {
@@ -35,28 +34,3 @@ export class AuthService {
     return this.jwtService.decode(token) as JwtPayload;
   }
 }
-// import { BadRequestException, Injectable } from '@nestjs/common';
-// import { UserService } from '../user/user.service';
-// import { compare } from 'bcrypt';
-
-// @Injectable()
-// export class AuthService {
-//   constructor(private readonly userService: UserService) {}
-
-//   async validateUser(email: string, password: string) {
-//     const user = await this.userService.findByEmail(email);
-
-//     const plainPassword = password;
-//     const hashPassword = user?.password;
-
-//     const isGoodPassword = await compare(plainPassword, hashPassword);
-
-//     if (!isGoodPassword || !user) {
-//       new BadRequestException();
-//     }
-
-//     delete user.password;
-
-//     return user;
-//   }
-// }
