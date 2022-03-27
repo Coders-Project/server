@@ -7,7 +7,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, FindOneOptions, Repository } from 'typeorm';
 import { Follow } from '../follower/entities/follower.entity';
-import { FindAllPostOptions } from '../post/dto/find-all-post.input';
 import { UserRoles } from '../role/dto/role.enum';
 import { Role } from '../role/entities/role.entity';
 import { Post } from './../post/entities/post.entity';
@@ -15,6 +14,7 @@ import { Profile } from './../profile/entites/profile.entity';
 // import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserInput } from './dto/create-user.input';
 import { FollowOutput } from './dto/follow.output';
+import { GetPostsOptions } from './dto/get-posts.input';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from './entities/user.entity';
 
@@ -203,7 +203,7 @@ export class UserService {
     userId: number,
     take?: number,
     page?: number,
-    options?: FindAllPostOptions,
+    options?: GetPostsOptions,
   ): Promise<any> {
     const _options = options || {};
     const _take = take || 10;

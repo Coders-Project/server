@@ -1,7 +1,7 @@
 import {
   InternalServerErrorException,
   PayloadTooLargeException,
-  UseGuards
+  UseGuards,
 } from '@nestjs/common';
 import {
   Args,
@@ -12,7 +12,7 @@ import {
   Query,
   ResolveField,
   Resolver,
-  Subscription
+  Subscription,
 } from '@nestjs/graphql';
 import { ExpressContext } from 'apollo-server-express';
 import { PubSub } from 'graphql-subscriptions';
@@ -20,8 +20,6 @@ import { FileUpload, GraphQLUpload } from 'graphql-upload';
 import { CurrentUser } from '../auth/dto/current-user.decorator';
 import { Public } from '../auth/dto/public.decorator';
 import { FileHandler } from '../helpers/FileHandler';
-import { FindAllPostInput } from '../post/dto/find-all-post.input';
-import { FindAllPostOutput } from '../post/dto/find-all-post.ouput';
 import { ProfileWithoutUser } from '../profile/dto/profile-without-user.input';
 import { Profile } from '../profile/entites/profile.entity';
 import { RoleWithoutUser } from '../role/dto/role-without-user';
@@ -32,6 +30,8 @@ import { FindAllUserOutput } from './dto/findall-user.output';
 import { FollowInput } from './dto/follow.input';
 import { FollowMutationOutput } from './dto/follow.mutation.output';
 import { FollowOutput } from './dto/follow.output';
+import { GetPostsInput } from './dto/get-posts.input';
+import { GetPostsOutput } from './dto/get-posts.ouput';
 import { RemoveFollowerOutput } from './dto/remove-follower.output';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from './entities/user.entity';
@@ -217,14 +217,14 @@ export class userResolver {
     return this.userService.getRole(user.id);
   }
 
-  @ResolveField(() => FindAllPostOutput, {
+  @ResolveField(() => GetPostsOutput, {
     name: 'posts',
     description: 'Get user post',
   })
   getPosts(
     @Parent() user: User,
-    @Args({ name: 'input', type: () => FindAllPostInput, nullable: true })
-    input: FindAllPostInput,
+    @Args({ name: 'input', type: () => GetPostsInput, nullable: true })
+    input: GetPostsInput,
   ): Promise<Role[]> {
     const _input = input || {};
     return this.userService.getPosts(

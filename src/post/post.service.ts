@@ -10,6 +10,7 @@ import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
 import { CreatePostInput } from './dto/create-post.input';
 import { FeedOptions } from './dto/feed.input';
+import { FindAllPostInput } from './dto/find-all-post.input';
 import { GetPostReportsInput } from './dto/get-post-reports.input';
 import { UpdatePostInput } from './dto/update-post.input';
 import { Post } from './entities/post.entity';
@@ -182,27 +183,71 @@ export class PostService {
       },
       take: _take,
       skip: _page,
+      relations: ['user'],
     });
+    // const posts = await this.postReportRepository
+    //   .createQueryBuilder('postReport')
+    //   .where('postReport.postId = :postId', { postId: post.id })
+    //   .orderBy('postReport.createdAt', 'DESC')
+    //   .leftJoinAndSelect('postReport.user', 'user')
+    //   .take(_take)
+    //   .skip(_page)
+    //   .getManyAndCount();
 
     console.log(posts);
-
-    // const posts = await this.postRepository.findAndCount({
-    //   order: {
-    //     createdAt: 'DESC',
-    //   },
-    //   take: _take,
-    //   skip: _page,
-    //   relations: ['reports'],
-    // });
 
     return {
       total: posts[1],
       list: posts[0],
+      // total: 10,
+      // list: [],
     };
   }
 
-  findAll(id: number) {
-    return this.postRepository.findOne(id);
+  async findAll(input: FindAllPostInput) {
+    const _input = input || {};
+    // const _options = options || {};
+    const _take = _input.take || 10;
+    const _page = _input.page ? _input.page * _take : 0;
+
+    const result = await this.postRepository.findAndCount({
+      take: _take,
+      skip: _page,
+    });
+
+    // const result = await this.postRepository
+    //   .createQueryBuilder('post')
+
+    //   // .loadRelationCountAndMap('post.reportCount', 'reports', 'reportCount')
+    //   .loadRelationCountAndMap('post.reportsCount', 'post.reports', 'reports')
+    //   .addSelect('COUNT(*)', 'reportsCount')
+    //   // .having('post.reports')
+    //   // .orderBy('reports', 'DESC')
+    //   .orderBy('reportsCount', 'DESC')
+    //   // .stream()
+    //   // .having('reports > 0')
+    //   // .leftJoin('COUNT(post.reports)', 'reports')
+    //   // .where('post.reportCount > 0')
+    //   // .having('COUNT(post.reports) > 0')
+    //   // .where('reports > 0')
+    //   // .select('*', 'post')
+    //   // .select('COUNT(reports.userId)', 'reportsCount')
+    //   // .select('COUNT(reports.userId)', 'reportsCount')
+    //   // .having('COUNT(reportsCount) > 0')
+    //   // .having('COUNT(*) > 0')
+    //   // .where('reports > 0')
+    //   .take(_take)
+    //   .skip(_page)
+    //   .getManyAndCount();
+
+    result[0].forEach(
+      (post) => (post.draftRaw = JSON.stringify(post.draftRaw)),
+    );
+
+    return {
+      total: result[1],
+      list: result[0],
+    };
   }
 
   findOne(id: number) {

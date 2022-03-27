@@ -10,15 +10,21 @@ import {
 } from '@nestjs/graphql';
 import { ExpressContext } from 'apollo-server-express';
 import { FileUpload, GraphQLUpload } from 'graphql-upload';
-import { CurrentUser } from 'src/auth/dto/current-user.decorator';
-import { Public } from 'src/auth/dto/public.decorator';
+import { CurrentUser } from '../auth/dto/current-user.decorator';
+import { Public } from '../auth/dto/public.decorator';
+import { Roles } from '../auth/dto/roles.decorator';
 import { FileHandler } from '../helpers/FileHandler';
 import { PostMedia } from '../post-media/entities/post-media.entity';
+import { UserRoles } from '../role/dto/role.enum';
 import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
 import { CreatePostInput } from './dto/create-post.input';
 import { FeedInput } from './dto/feed.input';
 import { FeedOuput } from './dto/feed.output';
+import { FindAllPostInput } from './dto/find-all-post.input';
+import { FindAllPostOutput } from './dto/find-all-post.ouput';
+import { GetPostReportsInput } from './dto/get-post-reports.input';
+import { GetPostReportsOutput } from './dto/get-post-reports.output';
 import { UpdatePostInput } from './dto/update-post.input';
 import { Post } from './entities/post.entity';
 import { PostService } from './post.service';
@@ -29,6 +35,15 @@ export class PostResolver {
     private readonly postService: PostService,
     private readonly userService: UserService,
   ) {}
+
+  @Roles(UserRoles.Admin)
+  @Query(() => FindAllPostOutput, { name: 'posts' })
+  async getPosts(
+    @Args('input', { type: () => FindAllPostInput, nullable: true })
+    input?: FindAllPostInput,
+  ) {
+    return this.postService.findAll(input);
+  }
 
   @Mutation(() => Post, { name: 'createPost' })
   async create(
@@ -138,17 +153,16 @@ export class PostResolver {
     );
   }
 
-  // @Roles(UserRoles.Admin)
-  // @Public()
-  // @Query(() => GetPostReportsOutput, { name: 'feed' })
-  // async getReports(
-  //   @Parent() post: Post,
-  //   @Args('input', { type: () => GetPostReportsInput, nullable: true })
-  //   input?: FeedInput,
-  // ) {
-  //   // const _input = input || {};
-  //   return this.postService.getReports(post,input);
-  // }
+  // NOTE : Le role guard est mit au niveau de la fonction getPosts() / query 'posts' car ça ne fonctionne pas ici
+  @ResolveField(() => GetPostReportsOutput, { name: 'reports' })
+  async getReports(
+    @Parent() post: Post,
+    @Args('input', { type: () => GetPostReportsInput, nullable: true })
+    input?: FeedInput,
+  ) {
+    // const _input = input || {};
+    return this.postService.getReports(post, input);
+  }
 
   // @Query(() => [Post], { name: 'post' })
   // findAll() {
