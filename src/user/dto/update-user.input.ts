@@ -26,6 +26,7 @@ export class UpdateUserInput extends PartialType(
       'profile',
       'followers',
       'followings',
+      'savedPost',
       'posts',
     ],
     InputType,

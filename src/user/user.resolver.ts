@@ -1,3 +1,4 @@
+import { InjectPubSub } from '@nestjs-query/query-graphql';
 import {
   InternalServerErrorException,
   PayloadTooLargeException,
@@ -32,31 +33,30 @@ import { FollowMutationOutput } from './dto/follow.mutation.output';
 import { FollowOutput } from './dto/follow.output';
 import { GetPostsInput } from './dto/get-posts.input';
 import { GetPostsOutput } from './dto/get-posts.ouput';
+import { GetSavedPostsOutput } from './dto/get-saved-posts.ouput';
 import { RemoveFollowerOutput } from './dto/remove-follower.output';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from './entities/user.entity';
 import { UserService } from './user.service';
 
-// TODO : Crée un pubsub global et l'injecter dans les contructors
-const pubSub = new PubSub();
-
+const FOLLOW_SUBSCRIPTION = 'follow';
 @Resolver(() => User)
 export class userResolver {
   constructor(
-    // @Inject('PUB_SUB') private pubSub: PubSub,
+    @InjectPubSub() private pubSub: PubSub,
     private readonly userService: UserService,
   ) {}
 
   @Public()
   @Subscription(() => FollowMutationOutput, {
-    name: 'follow',
+    name: FOLLOW_SUBSCRIPTION,
     resolve: (value) => value.payload,
   })
   subscribeToFollow() {
     // @Context('PUB_SUB') pubSub: PubSub, // ze
-    return pubSub.asyncIterator('follow');
+    // return pubSub.asyncIterator('follow');
+    return this.pubSub.asyncIterator(FOLLOW_SUBSCRIPTION);
   }
-
   @Mutation(() => FollowMutationOutput)
   async toggleFollow(
     @CurrentUser() user: User,
@@ -71,7 +71,10 @@ export class userResolver {
       followingId,
     );
 
-    pubSub.publish('follow', { payload: { follower, following } });
+    // pubSub.publish('follow', { payload: { follower, following } });
+    this.pubSub.publish(FOLLOW_SUBSCRIPTION, {
+      payload: { follower, following },
+    });
 
     return { follower, following };
   }
@@ -233,6 +236,19 @@ export class userResolver {
       _input.page,
       _input.options,
     );
+  }
+
+  @ResolveField(() => GetSavedPostsOutput, {
+    name: 'savedPost',
+    description: 'Get user post',
+  })
+  getSavedPost(
+    @Parent() user: User,
+    @Args({ name: 'input', type: () => GetPostsInput, nullable: true })
+    input: GetPostsInput,
+  ) {
+    const _input = input || {};
+    return this.userService.getSavedPost(user, _input.take, _input.page);
   }
 
   @ResolveField(() => ProfileWithoutUser, {

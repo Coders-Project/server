@@ -5,7 +5,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PubSub } from 'graphql-subscriptions';
 import { Context } from 'graphql-ws';
 import { join } from 'path';
 import { Connection } from 'typeorm';
@@ -14,13 +13,15 @@ import { JwtAuthGard } from './auth/guards/jwt.guard';
 import { RolesGuard } from './auth/guards/role.guard';
 import { PostMediaModule } from './post-media/post-media.module';
 import { PostMentionModule } from './post-mention/post-mention.module';
+import { PostReportModule } from './post-report/post-report.module';
 import { PostTagModule } from './post-tag/post-tag.module';
 import { PostModule } from './post/post.module';
 import { ProfileModule } from './profile/profile.module';
+import { PubSubModule } from './pubsub/pubsub.module';
 import { RoleModule } from './role/role.module';
 import { TagModule } from './tag/tag.module';
 import { UserModule } from './user/user.module';
-import { PostReportModule } from './post-report/post-report.module';
+import { PostSaveModule } from './post-save/post-save.module';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
@@ -63,15 +64,19 @@ import { PostReportModule } from './post-report/post-report.module';
     TagModule,
     PostMentionModule,
     PostReportModule,
+    // Ce module permet d'avoir le PubSub en global via l'injection de dépendance @InjectPubSub()
+    PubSubModule,
+    PostSaveModule,
   ],
   // On instancie ici les guards qui vont être appelés avant chaque requete
   // -> Authentication Guard (verifie si un user est authentifié)
   // -> Roles Guard (verifie si le user a un role specifique)
   providers: [
-    { provide: 'PUB_SUB', useValue: new PubSub() },
+    // { provide: 'pub_sub', useValue: new PubSub() },
     { provide: APP_GUARD, useClass: JwtAuthGard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
+  // exports: ['pub_sub'],
 })
 export class AppModule {
   constructor(private connection: Connection) {}

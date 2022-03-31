@@ -11,6 +11,6 @@ export class PostTag extends BaseEntity {
   tag: Tag;
 
   @Field(() => Post)
-  @ManyToOne(() => Post, { primary: true, cascade: true })
+  @ManyToOne(() => Post, { primary: true, cascade: true, onDelete: 'CASCADE' })
   post: Post;
 }

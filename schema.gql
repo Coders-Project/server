@@ -39,6 +39,12 @@ input GetPostReportsInput {
   take: Int
 }
 
+type PostSave {
+  createdAt: DateTime!
+  user: User!
+  post: Post!
+}
+
 type Profile {
   id: Int!
   displayname: String
@@ -68,6 +74,9 @@ type User {
 
   """Get user post"""
   posts(input: GetPostsInput): GetPostsOutput!
+
+  """Get user post"""
+  savedPost(input: GetPostsInput): GetSavedPostsOutput!
   isFollow: Boolean!
 }
 
@@ -119,6 +128,11 @@ type GetPostsOutput {
   list: [Post!]!
 }
 
+type GetSavedPostsOutput {
+  total: Int!
+  list: [PostSave!]!
+}
+
 type RemoveFollowerOutput {
   userId: Int!
 }
@@ -130,16 +144,6 @@ type LoginOutput {
 
 type PostMention {
   user: User!
-  post: Post!
-}
-
-type Tag {
-  tag: String!
-  createdAt: DateTime!
-}
-
-type PostTag {
-  tag: Tag!
   post: Post!
 }
 
@@ -158,6 +162,16 @@ type GetPostReportsOutput {
   list: [PostReport!]!
 }
 
+type Tag {
+  tag: String!
+  createdAt: DateTime!
+}
+
+type PostTag {
+  tag: Tag!
+  post: Post!
+}
+
 type FindAllPostReportOutput {
   list: [PostReport!]
   total: Int
@@ -171,12 +185,13 @@ type Query {
   login(input: LoginInput!): LoginOutput!
   rememberMe: LoginOutput!
   posts(input: FindAllPostInput): FindAllPostOutput!
+  post(postId: Int!): Post!
   feed(input: FeedInput): FeedOuput!
-  postMedia(id: Int!): PostMedia!
   postTag(id: Int!): PostTag!
   tag(id: Int!): Tag!
   postMention(id: Int!): PostMention!
   postReport(input: FindAllPostReportInput): FindAllPostReportOutput!
+  isSavedPost(postId: Int!): Boolean!
 }
 
 input FindAllUserInput {
@@ -221,9 +236,7 @@ type Mutation {
   createUser(input: CreateUserInput!): LoginOutput!
   createPost(input: CreatePostInput, medias: [Upload!]): Post!
   updatePost(input: UpdatePostInput, medias: [Upload!]): Post!
-  createPostMedia(createPostMediaInput: CreatePostMediaInput!): PostMedia!
-  updatePostMedia(updatePostMediaInput: UpdatePostMediaInput!): PostMedia!
-  removePostMedia(id: Int!): PostMedia!
+  deletePost(postId: Float): Int!
   createPostTag(createPostTagInput: CreatePostTagInput!): PostTag!
   updatePostTag(updatePostTagInput: UpdatePostTagInput!): PostTag!
   removePostTag(id: Int!): PostTag!
@@ -234,6 +247,7 @@ type Mutation {
   updatePostMention(updatePostMentionInput: UpdatePostMentionInput!): PostMention!
   removePostMention(id: Int!): PostMention!
   reportPost(input: PostReportInput!): PostReport!
+  toggleSavePost(postId: Int!): PostSave!
 }
 
 input UpdateUserInput {
@@ -276,17 +290,6 @@ input UpdatePostInput {
   mediasRemovedIds: [Int!]
 }
 
-input CreatePostMediaInput {
-  """Example field (placeholder)"""
-  exampleField: Int!
-}
-
-input UpdatePostMediaInput {
-  """Example field (placeholder)"""
-  exampleField: Int
-  id: Int!
-}
-
 input CreatePostTagInput {
   """Example field (placeholder)"""
   exampleField: Int!
@@ -327,4 +330,5 @@ input PostReportInput {
 
 type Subscription {
   follow: FollowMutationOutput!
+  reportPost: PostReport!
 }

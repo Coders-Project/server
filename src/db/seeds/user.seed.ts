@@ -3,6 +3,7 @@ import { Connection } from 'typeorm';
 import { Factory, Seeder } from 'typeorm-seeding';
 import { Follow } from '../../follower/entities/follower.entity';
 import stateFromHTML from '../../helpers/helpers';
+import { PostMedia } from '../../post-media/entities/post-media.entity';
 import { Post } from '../../post/entities/post.entity';
 import { Profile } from '../../profile/entites/profile.entity';
 import { UserRoles } from '../../role/dto/role.enum';
@@ -80,7 +81,7 @@ export default class CreateUser implements Seeder {
    * @param user
    * @param connection
    */
-  generatePost = async (user: User, connection) => {
+  generatePost = async (user: User, connection: Connection) => {
     // prettier-ignore
     const emojis = ["✌","😂","😝","😁","😱","👉","🙌","🍻","🔥","🌈","☀","🎈","🌹","💄","🎀","⚽","🎾","🏁","😡","👿","🐻","🐶","🐬","🐟","🍀","👀","🚗","🍎","💝","💙","👌","❤","😍","😉","😓","😳","💪","💩","🍸","🔑","💖","🌟","🎉","🌺","🎶","👠","🏈","⚾","🏆","👽","💀","🐵","🐮","🐩","🐎","💣","👃","👂","🍓","💘","💜","👊","💋","😘","😜","😵","🙏","👋","🚽","💃","💎","🚀","🌙","🎁","⛄","🌊","⛵","🏀","🎱","💰","👶","👸","🐰","🐷","🐍","🐫","🔫","👄","🚲","🍉","💛","💚"]
 
@@ -115,10 +116,40 @@ export default class CreateUser implements Seeder {
         )} ${randomEmojis.join('')}<p>`;
       }
 
-      await connection.getRepository(Post).insert({
+      const post = await connection.getRepository(Post).insert({
         user: user,
         draftRaw: JSON.stringify(stateFromHTML(content)),
+        // medias: [...postMedias],
+        createdAt: faker.date.between(
+          '2010-01-01T00:00:00.000Z',
+          '2022-01-01T00:00:00.000Z',
+        ),
+        // draftRaw: JSON.stringify('zeze'),
       });
+
+      const mediasCount = faker.datatype.number({
+        min: 0,
+        max: 4,
+      });
+
+      for (let i = 0; i < mediasCount; i++) {
+        const randomMedia = faker.datatype.number({
+          min: 1,
+          max: 4,
+        });
+        await connection.getRepository(PostMedia).insert({
+          path: `/default/post/photo-${randomMedia}.jpg`,
+          post: post.generatedMaps[0],
+          // draftRaw: JSON.stringify('zeze'),
+        });
+        // const postMedia = new PostMedia();
+        // postMedia.path = faker.image.imageUrl() || 'ezzezezez';
+        // postMedia.post = post.raw;
+        // await postMedia.save();
+        // postMedias.push(postMedia);
+      }
+
+      // console.log(postMedias, 'postMedias');
     }
   };
 

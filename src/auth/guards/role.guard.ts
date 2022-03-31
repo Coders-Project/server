@@ -33,16 +33,6 @@ export class RolesGuard implements CanActivate {
     // On recupere le role requis le plus bas dans la hierarchie
     const minRequiredRole = requiredRoles.sort((a, b) => a - b)[0];
 
-    console.log('maxUserRole', maxUserRole);
-    console.log('maxUserRole', maxUserRole);
-    console.log('maxUserRole', maxUserRole);
-    console.log('maxUserRole', maxUserRole);
-
-    console.log('minRequiredRole', minRequiredRole);
-    console.log('minRequiredRole', minRequiredRole);
-    console.log('minRequiredRole', minRequiredRole);
-    console.log('minRequiredRole', minRequiredRole);
-
     // On compare les deux roles et verifie si il peut lire la ressource
     // Si vrai il est autorisé a accéder a la ressource
     // return minRequiredRole <= maxUserRole;

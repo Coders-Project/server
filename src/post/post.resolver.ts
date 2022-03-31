@@ -2,6 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import {
   Args,
   Context,
+  Int,
   Mutation,
   Parent,
   Query,
@@ -10,6 +11,7 @@ import {
 } from '@nestjs/graphql';
 import { ExpressContext } from 'apollo-server-express';
 import { FileUpload, GraphQLUpload } from 'graphql-upload';
+import { AuthService } from '../auth/auth.service';
 import { CurrentUser } from '../auth/dto/current-user.decorator';
 import { Public } from '../auth/dto/public.decorator';
 import { Roles } from '../auth/dto/roles.decorator';
@@ -17,7 +19,6 @@ import { FileHandler } from '../helpers/FileHandler';
 import { PostMedia } from '../post-media/entities/post-media.entity';
 import { UserRoles } from '../role/dto/role.enum';
 import { User } from '../user/entities/user.entity';
-import { UserService } from '../user/user.service';
 import { CreatePostInput } from './dto/create-post.input';
 import { FeedInput } from './dto/feed.input';
 import { FeedOuput } from './dto/feed.output';
@@ -33,7 +34,7 @@ import { PostService } from './post.service';
 export class PostResolver {
   constructor(
     private readonly postService: PostService,
-    private readonly userService: UserService,
+    private readonly authService: AuthService,
   ) {}
 
   @Roles(UserRoles.Admin)
@@ -43,6 +44,14 @@ export class PostResolver {
     input?: FindAllPostInput,
   ) {
     return this.postService.findAll(input);
+  }
+
+  @Query(() => Post, { name: 'post' })
+  async getPost(
+    @Args('postId', { type: () => Int })
+    postId: number,
+  ) {
+    return this.postService.findOne(postId);
   }
 
   @Mutation(() => Post, { name: 'createPost' })
@@ -89,6 +98,8 @@ export class PostResolver {
     })
     mediasPendings: FileUpload[],
   ) {
+    await this.postService.checkPostBelongToUser(user, updatePostInput.id);
+
     // On attends que tout les fichiers soit résolu avant de les uploads
     const medias = (await Promise.all(mediasPendings || [])) || [];
 
@@ -160,22 +171,16 @@ export class PostResolver {
     @Args('input', { type: () => GetPostReportsInput, nullable: true })
     input?: FeedInput,
   ) {
-    // const _input = input || {};
     return this.postService.getReports(post, input);
   }
 
-  // @Query(() => [Post], { name: 'post' })
-  // findAll() {
-  //   return this.postService.findAll();
-  // }
-
-  // @Query(() => Post, { name: 'post' })
-  // findOne(@Args('id', { type: () => Int }) id: number) {
-  //   return this.postService.findOne(id);
-  // }
-
-  // @Mutation(() => Post)
-  // removePost(@Args('id', { type: () => Int }) id: number) {
-  //   return this.postService.remove(id);
-  // }
+  // TODO : Crée un decorator qui gere la verif d'appartenance a une publication ET les roles
+  @Mutation(() => Int, { name: 'deletePost' })
+  async deletePost(
+    @CurrentUser() user: User,
+    @Args('postId', { nullable: true }) postId: number,
+  ) {
+    await this.postService.checkPostBelongToUser(user, postId);
+    return this.postService.remove(postId);
+  }
 }

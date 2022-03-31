@@ -1,10 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, Repository } from 'typeorm';
+import { AuthService } from '../auth/auth.service';
 import { PostMedia } from '../post-media/entities/post-media.entity';
 import { PostMention } from '../post-mention/entities/post-mention.entity';
 import { PostReport } from '../post-report/entity/post-report.entity';
 import { PostTag } from '../post-tag/entities/post-tag.entity';
+import { UserRoles } from '../role/dto/role.enum';
 import { Tag } from '../tag/entities/tag.entity';
 import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
@@ -24,6 +30,7 @@ export class PostService {
     private readonly postMediaRepository: Repository<PostMedia>,
     @InjectRepository(PostReport)
     private readonly postReportRepository: Repository<PostReport>,
+    private readonly authService: AuthService,
   ) {}
 
   async create(
@@ -206,39 +213,17 @@ export class PostService {
 
   async findAll(input: FindAllPostInput) {
     const _input = input || {};
-    // const _options = options || {};
     const _take = _input.take || 10;
     const _page = _input.page ? _input.page * _take : 0;
 
-    const result = await this.postRepository.findAndCount({
-      take: _take,
-      skip: _page,
-    });
-
-    // const result = await this.postRepository
-    //   .createQueryBuilder('post')
-
-    //   // .loadRelationCountAndMap('post.reportCount', 'reports', 'reportCount')
-    //   .loadRelationCountAndMap('post.reportsCount', 'post.reports', 'reports')
-    //   .addSelect('COUNT(*)', 'reportsCount')
-    //   // .having('post.reports')
-    //   // .orderBy('reports', 'DESC')
-    //   .orderBy('reportsCount', 'DESC')
-    //   // .stream()
-    //   // .having('reports > 0')
-    //   // .leftJoin('COUNT(post.reports)', 'reports')
-    //   // .where('post.reportCount > 0')
-    //   // .having('COUNT(post.reports) > 0')
-    //   // .where('reports > 0')
-    //   // .select('*', 'post')
-    //   // .select('COUNT(reports.userId)', 'reportsCount')
-    //   // .select('COUNT(reports.userId)', 'reportsCount')
-    //   // .having('COUNT(reportsCount) > 0')
-    //   // .having('COUNT(*) > 0')
-    //   // .where('reports > 0')
-    //   .take(_take)
-    //   .skip(_page)
-    //   .getManyAndCount();
+    const result = await this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.reports', 'reports')
+      .where('reports.postId = post.id')
+      .orderBy('reports.createdAt', 'DESC')
+      .take(_take)
+      .skip(_page)
+      .getManyAndCount();
 
     result[0].forEach(
       (post) => (post.draftRaw = JSON.stringify(post.draftRaw)),
@@ -250,16 +235,48 @@ export class PostService {
     };
   }
 
-  findOne(id: number) {
-    return this.postRepository.findOne(id);
-    // return `This action returns a #${id} post`;
+  async findOne(id: number) {
+    const post = await this.postRepository.findOne(id);
+    if (post) {
+      post.draftRaw = JSON.stringify(post.draftRaw);
+    } else {
+      throw new NotFoundException(`Post with id ${id} not found`);
+    }
+    return post;
   }
 
   update(id: number, updatePostInput: UpdatePostInput) {
     return `This action updates a #${id} post`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  async remove(id: number) {
+    const deletedPost = await this.postRepository.findOne(id);
+    if (deletedPost) {
+      await deletedPost.remove();
+    } else {
+      throw new NotFoundException(`Post with id ${id} not found`);
+    }
+    return id;
+  }
+  /**
+   * Verifie si un post appartient a un utilisateur
+   * @param user
+   * @param postId
+   * @returns
+   */
+  async checkPostBelongToUser(user: User, postId: number) {
+    const post = await this.postRepository.findOne(postId, {
+      relations: ['user'],
+    });
+
+    if (this.authService.hasAccess(user, [UserRoles.Admin])) {
+      return true;
+    }
+
+    if (!post) {
+      throw new NotFoundException(`Post with id ${postId} not found`);
+    } else if (post.user.id !== user.id) {
+      throw new UnauthorizedException(`You can't access this post`);
+    }
   }
 }

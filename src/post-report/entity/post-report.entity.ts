@@ -23,10 +23,10 @@ export class PostReport extends BaseEntity {
   createdAt: string;
 
   @Field(() => User)
-  @ManyToOne(() => User, { primary: true })
+  @ManyToOne(() => User, { primary: true, onDelete: 'CASCADE' })
   user: User;
 
   @Field(() => Post)
-  @ManyToOne(() => Post, { primary: true })
+  @ManyToOne(() => Post, { primary: true, onDelete: 'CASCADE' })
   post: Post;
 }

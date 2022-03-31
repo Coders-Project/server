@@ -27,11 +27,6 @@ export default function stateFromHTML(html) {
 
   const blocksFromHTML = convertFromHTML(html, DOMBuilder);
 
-  //   return ContentState.createFromBlockArray(
-  //     //   blocksFromHTML.contentBlocks,
-  //     blocksFromHTML.contentBlocks,
-  //     blocksFromHTML.entityMap,
-  //   );
   return convertToRaw(
     ContentState.createFromBlockArray(
       blocksFromHTML.contentBlocks,

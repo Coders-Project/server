@@ -21,7 +21,7 @@ export class PostMedia extends BaseEntity {
   path: string;
 
   @Field(() => Post)
-  @ManyToOne((type) => Post, (post) => post.medias)
+  @ManyToOne((type) => Post, (post) => post.medias, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'post_id' })
   post: Post;
 }

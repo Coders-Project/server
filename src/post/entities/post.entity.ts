@@ -15,18 +15,12 @@ import {
 import { PostMedia } from '../../post-media/entities/post-media.entity';
 import { PostReport } from '../../post-report/entity/post-report.entity';
 import { User } from '../../user/entities/user.entity';
-
 @ObjectType('Post')
 @Entity('post')
 export class Post extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
   id: number;
-
-  // @Field(() => String, { nullable: true })
-  // @Column({ nullable: true })
-  // // @MaxLength(300)
-  // body: string;
 
   @Field(() => String, {
     nullable: true,
@@ -45,7 +39,7 @@ export class Post extends BaseEntity {
 
   @Field(() => Date)
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: string;
+  createdAt: Date;
 
   @Field(() => User)
   @ManyToOne((type) => User, (user) => user.posts)
@@ -60,6 +54,7 @@ export class Post extends BaseEntity {
   @Field(() => PostReport)
   @OneToMany((type) => PostReport, (postReport) => postReport.post, {
     cascade: true,
+    // onDelete: 'CASCADE',
   })
   reports: PostReport[];
 

@@ -11,6 +11,6 @@ export class PostMention extends BaseEntity {
   user: User;
 
   @Field(() => Post)
-  @ManyToOne(() => Post, { primary: true, cascade: true })
+  @ManyToOne(() => Post, { primary: true, cascade: true, onDelete: 'CASCADE' })
   post: Post;
 }

@@ -47,8 +47,6 @@ export class PostReportService {
       relations: ['post', 'user'],
     });
 
-    console.log(result);
-
     return {
       total: result[1],
       list: result[0],

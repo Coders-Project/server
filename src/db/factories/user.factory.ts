@@ -21,6 +21,10 @@ define(
       const role = new Role();
       role.level = context.role;
       user.roles = [role];
+      user.createdAt = faker.date.between(
+        '2010-01-01T00:00:00.000Z',
+        '2022-01-01T00:00:00.000Z',
+      );
       // user.roles = role;
     }
 

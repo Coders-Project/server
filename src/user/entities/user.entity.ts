@@ -22,6 +22,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Follow } from '../../follower/entities/follower.entity';
+import { PostSave } from '../../post-save/entities/post-save.entity';
 import { Post } from '../../post/entities/post.entity';
 import { Profile } from '../../profile/entites/profile.entity';
 import { UserRoles } from '../../role/dto/role.enum';
@@ -72,14 +73,6 @@ export class User extends BaseEntity {
   @JoinColumn()
   profile: Profile;
 
-  // @Field(() => User)
-  // @OneToMany((type) => Follow, (user) => user.follower, { cascade: true })
-  // followers: User[];
-
-  // @Field(() => User)
-  // @OneToMany((type) => Follow, (user) => user.following, { cascade: true })
-  // followings: User[];
-
   @Field(() => User)
   @OneToMany((type) => Follow, (user) => user.following, { cascade: true })
   followers: User[];
@@ -89,8 +82,12 @@ export class User extends BaseEntity {
   followings: User[];
 
   @Field(() => Post)
-  @OneToMany((type) => Post, (post) => post.user, { cascade: true })
+  @OneToMany((type) => Post, (post) => post.user)
   posts: Post[];
+
+  @Field(() => PostSave)
+  @OneToMany((type) => PostSave, (post) => post.user)
+  savedPost: PostSave[];
 
   // TODO : Enlever ce field
   @Field(() => Boolean)

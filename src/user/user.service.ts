@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, FindOneOptions, Repository } from 'typeorm';
 import { Follow } from '../follower/entities/follower.entity';
+import { PostSave } from '../post-save/entities/post-save.entity';
 import { UserRoles } from '../role/dto/role.enum';
 import { Role } from '../role/entities/role.entity';
 import { Post } from './../post/entities/post.entity';
@@ -30,6 +31,8 @@ export class UserService {
     private usersRepository: Repository<User>,
     @InjectRepository(Profile)
     private profileRepository: Repository<Profile>,
+    @InjectRepository(PostSave)
+    private savedPostRepository: Repository<PostSave>,
   ) {}
 
   async create(createuserInput: CreateUserInput) {
@@ -196,6 +199,31 @@ export class UserService {
     return {
       total: result[1],
       list: result[0].map((r) => r.following),
+    };
+  }
+
+  async getSavedPost(user: User, take?: number, page?: number) {
+    const _take = take || 10;
+    const _page = page ? page * _take : 0;
+
+    const result = await this.savedPostRepository.findAndCount({
+      where: {
+        user: user,
+      },
+      take: _take,
+      skip: _page,
+      relations: ['post'],
+    });
+    console.log(result);
+
+    // console.log(result[0]);
+    result[0].forEach(
+      (v) => (v.post.draftRaw = JSON.stringify(v.post.draftRaw)),
+    );
+
+    return {
+      total: result[1],
+      list: result[0],
     };
   }
 
