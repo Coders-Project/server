@@ -9,8 +9,8 @@ export class GqlAuthGuard extends AuthGuard('local') {
     const gqlReq = ctx.getContext().req;
     if (gqlReq) {
       // On récuperer les arguments de la mutation : login
-      // input -> car c'est un @InputType()
       const {
+        // input -> car c'est nom du paramettre de fonction décoré @InputType()
         input: { email, password },
       } = ctx.getArgs();
       // L'email et le password sont envoyé au middleware passport-local (par le body de la request)
