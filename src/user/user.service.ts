@@ -5,7 +5,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, FindOneOptions, Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import { Follow } from '../follower/entities/follower.entity';
 import { PostSave } from '../post-save/entities/post-save.entity';
 import { UserRoles } from '../role/dto/role.enum';
@@ -22,13 +22,12 @@ import { User } from './entities/user.entity';
 @Injectable()
 export class UserService {
   constructor(
-    private connection: Connection,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
     @InjectRepository(Post)
     private postRepository: Repository<Post>,
     @InjectRepository(Follow)
     private followRepository: Repository<Follow>,
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
     @InjectRepository(Profile)
     private profileRepository: Repository<Profile>,
     @InjectRepository(PostSave)

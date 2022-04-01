@@ -9,10 +9,6 @@ const PUB_SUB = 'pub_sub';
     {
       provide: PUB_SUB,
       useClass: PubSub,
-      // useValue: new PubSub(),
-      // useFactory: () => {
-      //  return new PubSub();
-      // }
     },
   ],
   exports: [PUB_SUB],
