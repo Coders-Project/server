@@ -2,7 +2,7 @@ import {
   Inject,
   InternalServerErrorException,
   PayloadTooLargeException,
-  UseGuards,
+  UseGuards
 } from '@nestjs/common';
 import {
   Args,
@@ -13,7 +13,7 @@ import {
   Query,
   ResolveField,
   Resolver,
-  Subscription,
+  Subscription
 } from '@nestjs/graphql';
 import { ExpressContext } from 'apollo-server-express';
 import { PubSub } from 'graphql-subscriptions';
@@ -43,7 +43,7 @@ const FOLLOW_SUBSCRIPTION = 'follow';
 @Resolver(() => User)
 export class userResolver {
   constructor(
-    @Inject('pub_sub')private pubSub: PubSub,
+    @Inject('pub_sub') private pubSub: PubSub,
     private readonly userService: UserService,
   ) {}
 
