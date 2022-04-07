@@ -45,7 +45,7 @@ export class FileHandler {
           mkdirSync(`./static/${directoryPath}`, { recursive: true });
         }
 
-        // Puis on écrit le fichier de le dossier
+        // Puis on écrit le fichier dans le dossier
         createReadStream()
           .pipe(createWriteStream(`./static/${uploadPath}`))
           .on('finish', () => resolve(true))

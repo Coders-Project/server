@@ -11,12 +11,17 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  Tree,
+  TreeChildren,
+  TreeParent,
 } from 'typeorm';
 import { PostMedia } from '../../post-media/entities/post-media.entity';
 import { PostReport } from '../../post-report/entity/post-report.entity';
 import { User } from '../../user/entities/user.entity';
+
 @ObjectType('Post')
 @Entity('post')
+@Tree('closure-table')
 export class Post extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
@@ -28,10 +33,6 @@ export class Post extends BaseEntity {
   })
   @Column({ nullable: true, type: 'json' })
   draftRaw: RawDraftContentState | string;
-
-  @Field(() => Int, { nullable: true })
-  @Column({ nullable: true })
-  postParentId?: number;
 
   @Field(() => Boolean, { nullable: true })
   @Column({ default: false })
@@ -54,9 +55,14 @@ export class Post extends BaseEntity {
   @Field(() => PostReport)
   @OneToMany((type) => PostReport, (postReport) => postReport.post, {
     cascade: true,
-    // onDelete: 'CASCADE',
   })
   reports: PostReport[];
+
+  @TreeChildren({ cascade: true })
+  children: Post[];
+
+  @TreeParent({ onDelete: 'CASCADE' })
+  parent: Post;
 
   @BeforeUpdate()
   @BeforeInsert()

@@ -26,6 +26,8 @@ import { FindAllPostInput } from './dto/find-all-post.input';
 import { FindAllPostOutput } from './dto/find-all-post.ouput';
 import { GetPostReportsInput } from './dto/get-post-reports.input';
 import { GetPostReportsOutput } from './dto/get-post-reports.output';
+import { PostPaginationInput } from './dto/post-pagination.input';
+import { PostPaginationOuput } from './dto/post-pagination.output';
 import { UpdatePostInput } from './dto/update-post.input';
 import { Post } from './entities/post.entity';
 import { PostService } from './post.service';
@@ -68,13 +70,12 @@ export class PostResolver {
     // On attends que tout les fichiers soit résolu avant de les uploads
     const medias = (await Promise.all(mediasPendings || [])) || [];
 
-    /**
-     * On crée le post
-     */
+    // On verifie si il est a au moins un media ou un body
     if (medias.length === 0 && !createPostInput.draftRaw) {
       return new BadRequestException('We need at least one media or body');
     }
 
+    // On upload les fichiers un par un, puis on stock le chemin dans un tableau
     const mediasPaths = [];
     for (const media of medias) {
       const file = await FileHandler.upload(media, String(user.id));
@@ -112,13 +113,16 @@ export class PostResolver {
       (updatePostInput.mediasRemovedIds?.length || 0) +
       (mediasPendings?.length || 0);
 
+    // On verifie si la publication contient maximum 4 medias,
+    // en comptant les medias déjà présent et ceux ajouteur via l'update
     if (currMediasLength > 4 && !updatePostInput.draftRaw) {
       return new BadRequestException(`4 medias max, ${currMediasLength} given`);
     }
 
-    // if (medias.length === 0 && !updatePostInput.draftRaw) {
-    //   return new BadRequestException('We need at least one media or body');
-    // }
+    // On verifie si la publication contient au moins un media ou un body
+    if (medias.length === 0 && !updatePostInput.draftRaw) {
+      return new BadRequestException('We need at least one media or body');
+    }
 
     const mediasPaths = [];
     for (const media of medias) {
@@ -143,12 +147,6 @@ export class PostResolver {
     return medias;
   }
 
-  @ResolveField(() => User, { name: 'author' })
-  getUser(@Parent() post: Post): Promise<User> {
-    console.log(post);
-    return this.postService.findPostAuthor(post.id);
-  }
-
   @Public()
   @Query(() => FeedOuput, { name: 'feed' })
   async getFeed(
@@ -164,6 +162,22 @@ export class PostResolver {
     );
   }
 
+  // TODO : Crée un decorator qui gere la verif d'appartenance a une publication ET les roles
+  @Mutation(() => Int, { name: 'deletePost' })
+  async deletePost(
+    @CurrentUser() user: User,
+    @Args('postId', { nullable: true }) postId: number,
+  ) {
+    await this.postService.checkPostBelongToUser(user, postId);
+    return this.postService.remove(postId);
+  }
+
+  @ResolveField(() => User, { name: 'author' })
+  getUser(@Parent() post: Post): Promise<User> {
+    console.log(post);
+    return this.postService.findPostAuthor(post.id);
+  }
+
   // NOTE : Le role guard est mit au niveau de la fonction getPosts() / query 'posts' car ça ne fonctionne pas ici
   @ResolveField(() => GetPostReportsOutput, { name: 'reports' })
   async getReports(
@@ -174,13 +188,19 @@ export class PostResolver {
     return this.postService.getReports(post, input);
   }
 
-  // TODO : Crée un decorator qui gere la verif d'appartenance a une publication ET les roles
-  @Mutation(() => Int, { name: 'deletePost' })
-  async deletePost(
-    @CurrentUser() user: User,
-    @Args('postId', { nullable: true }) postId: number,
+  @ResolveField(() => PostPaginationOuput, { name: 'replies' })
+  getReplies(
+    @Args('input', { nullable: true }) input: PostPaginationInput,
+    @Parent() post: Post,
   ) {
-    await this.postService.checkPostBelongToUser(user, postId);
-    return this.postService.remove(postId);
+    return this.postService.getReplies(post, input);
+  }
+
+  @ResolveField(() => PostPaginationOuput, { name: 'parents' })
+  async getParents(
+    @Args('input', { nullable: true }) input: PostPaginationInput,
+    @Parent() post: Post,
+  ) {
+    return this.postService.getParents(post, input);
   }
 }

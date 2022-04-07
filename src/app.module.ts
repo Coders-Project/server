@@ -22,6 +22,7 @@ import { RoleModule } from './role/role.module';
 import { TagModule } from './tag/tag.module';
 import { UserModule } from './user/user.module';
 import { PostSaveModule } from './post-save/post-save.module';
+import { PostReplyModule } from './post-reply/post-reply.module';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
@@ -67,6 +68,7 @@ import { PostSaveModule } from './post-save/post-save.module';
     // Ce module permet d'avoir le PubSub en global via l'injection de dépendance @InjectPubSub()
     PubSubModule,
     PostSaveModule,
+    PostReplyModule,
   ],
   // On instancie ici les guards qui vont être appelés avant chaque requete
   // -> Authentication Guard (verifie si un user est authentifié)
