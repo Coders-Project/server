@@ -1,4 +1,5 @@
-import { InjectPubSub } from '@nestjs-query/query-graphql';
+// import { InjectPubSub } from '@nestjs-query/query-graphql';
+import { Inject } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
 import { PubSub } from 'graphql-subscriptions';
 import { CurrentUser } from '../auth/dto/current-user.decorator';
@@ -16,7 +17,7 @@ const REPORT_POST_SUBSCRIPTION = 'reportPost';
 @Resolver()
 export class PostReportResolver {
   constructor(
-    @InjectPubSub() private readonly pubSub: PubSub,
+    @Inject('pub_sub') private readonly pubSub: PubSub,
     private readonly postReportService: PostReportService,
   ) {}
 

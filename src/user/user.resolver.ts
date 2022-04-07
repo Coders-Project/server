@@ -1,5 +1,5 @@
-import { InjectPubSub } from '@nestjs-query/query-graphql';
 import {
+  Inject,
   InternalServerErrorException,
   PayloadTooLargeException,
   UseGuards,
@@ -43,7 +43,7 @@ const FOLLOW_SUBSCRIPTION = 'follow';
 @Resolver(() => User)
 export class userResolver {
   constructor(
-    @InjectPubSub() private pubSub: PubSub,
+    @Inject('pub_sub')private pubSub: PubSub,
     private readonly userService: UserService,
   ) {}
 
