@@ -5,7 +5,11 @@ import { Profile } from '../../profile/entites/profile.entity';
 define(Profile, (faker: typeof Faker) => {
   const profile = new Profile();
 
-  profile.bio = faker.lorem.sentences(3);
+  const randomBioWords = Faker.datatype.number({
+    min: 0,
+    max: 3,
+  });
+  profile.bio = faker.lorem.sentences(randomBioWords);
   profile.displayname = faker.name.findName();
 
   return profile;

@@ -17,12 +17,20 @@ import {
   JoinColumn,
   JoinTable,
   ManyToMany,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Follow } from '../../follower/entities/follower.entity';
+import { PostSave } from '../../post-save/entities/post-save.entity';
+import { Post } from '../../post/entities/post.entity';
 import { Profile } from '../../profile/entites/profile.entity';
 import { UserRoles } from '../../role/dto/role.enum';
 import { Role } from '../../role/entities/role.entity';
+
+/**
+ * NOTE : Modifier le Omit() dans update-user.input.ts a chaque ajout de champ dans cette entité
+ */
 @ObjectType()
 @Entity()
 export class User extends BaseEntity {
@@ -64,6 +72,26 @@ export class User extends BaseEntity {
   @OneToOne(() => Profile, (profile) => profile.user, { cascade: true })
   @JoinColumn()
   profile: Profile;
+
+  @Field(() => User)
+  @OneToMany((type) => Follow, (user) => user.following, { cascade: true })
+  followers: User[];
+
+  @Field(() => User)
+  @OneToMany((type) => Follow, (user) => user.user, { cascade: true })
+  followings: User[];
+
+  @Field(() => Post)
+  @OneToMany((type) => Post, (post) => post.user)
+  posts: Post[];
+
+  @Field(() => PostSave)
+  @OneToMany((type) => PostSave, (post) => post.user)
+  savedPost: PostSave[];
+
+  // TODO : Enlever ce field
+  @Field(() => Boolean)
+  isFollow: boolean;
 
   // Verifie si les valeurs des propriétés sont valide avant l'insertion
   @BeforeInsert()

@@ -9,6 +9,7 @@ import { ROLES_KEY } from '../dto/roles.decorator';
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
+  // TODO :  check pourquoi il ne fonctionne pas sur les resolveField()
   canActivate(context: ExecutionContext): boolean {
     // On recupere les metadonnée du décorateur -> @Roles()
     // Ex : @Roles(UserRoles.Moderator) -> on va donc recuperer la valeur ici
@@ -33,7 +34,8 @@ export class RolesGuard implements CanActivate {
     const minRequiredRole = requiredRoles.sort((a, b) => a - b)[0];
 
     // On compare les deux roles et verifie si il peut lire la ressource
-    // Si oui il est autorisé a accéder a la ressource
-    return minRequiredRole <= maxUserRole;
+    // Si vrai il est autorisé a accéder a la ressource
+    // return minRequiredRole <= maxUserRole;
+    return maxUserRole >= minRequiredRole;
   }
 }

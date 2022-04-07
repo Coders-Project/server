@@ -45,7 +45,7 @@ export class FileHandler {
           mkdirSync(`./static/${directoryPath}`, { recursive: true });
         }
 
-        // Puis on l'ecrit
+        // Puis on écrit le fichier dans le dossier
         createReadStream()
           .pipe(createWriteStream(`./static/${uploadPath}`))
           .on('finish', () => resolve(true))
@@ -53,19 +53,8 @@ export class FileHandler {
       });
     };
 
-    // try {
     await write();
     return { uploadPath };
-    // } catch (err) {
-    //   // console.log(err.);
-    //   // if (err instanceof Error) {
-    //   //   if (err.name === 'PayloadTooLargeError') {
-    //   //     throw new Error({ error: { maxFileSize: true } });
-    //   //   }
-    //   //   // console.log(err.name);
-    //   // }
-    //   throw new Error(err);
-    // }
   }
 
   static getStaticPath = (ctx: ExpressContext, relativePath: string) => {

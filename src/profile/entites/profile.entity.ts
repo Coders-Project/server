@@ -1,4 +1,4 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { Length, validateOrReject } from 'class-validator';
 import {
   BaseEntity,
@@ -13,6 +13,7 @@ import { User } from '../../user/entities/user.entity';
 @ObjectType()
 @Entity()
 export class Profile extends BaseEntity {
+  @Field(() => Int)
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -27,7 +28,12 @@ export class Profile extends BaseEntity {
   bio: string;
 
   @Field(() => String, { nullable: true })
-  @Column({ nullable: true, length: 300, default: '', name: 'profile_picture' })
+  @Column({
+    nullable: true,
+    length: 300,
+    default: '/default/avatar-picture.png',
+    name: 'profile_picture',
+  })
   @Length(0, 4096)
   profilePicture: string;
 
@@ -35,7 +41,7 @@ export class Profile extends BaseEntity {
   @Column({
     nullable: true,
     length: 300,
-    default: '',
+    default: '/default/banner-picture.png',
     name: 'background_picture',
   })
   @Length(0, 4096)

@@ -4,8 +4,8 @@ import { User } from '../entities/user.entity';
 
 @InputType()
 class SubUpdateProfileInput extends PartialType(
-  ProfileWithoutUser,
-  // OmitType(ProfileWithoutUser, ['profilePicture', 'backroundPicture']),
+  // ProfileWithoutUser,
+  OmitType(ProfileWithoutUser, ['id']),
   InputType,
 ) {
   // @Field(() => GraphQLUpload, { nullable: true })
@@ -17,14 +17,32 @@ class SubUpdateProfileInput extends PartialType(
 export class UpdateUserInput extends PartialType(
   OmitType(
     User,
-    ['id', 'password', 'createdAt', 'roles', 'profile'],
+    // ['id', 'password', 'createdAt', 'roles', 'profile', 'followers'],
+    [
+      'id',
+      'password',
+      'createdAt',
+      'roles',
+      'profile',
+      'followers',
+      'followings',
+      'savedPost',
+      'posts',
+    ],
     InputType,
   ),
+  // PickType(
+  //   User,
+  //   // ['id', 'password', 'createdAt', 'roles', 'profile', 'followers'],
+  //   ['username', 'email'],
+  //   InputType,
+  // ),
 ) {
   @Field(() => SubUpdateProfileInput, { nullable: true })
   profile: SubUpdateProfileInput;
 }
-
+// const test : UpdateUserInput;
+// test.profile.
 // @InputType()
 // class SubUpdateUserInput extends PartialType(
 //   OmitType(User, ['createdAt', 'id', 'roles', 'profile'], InputType),

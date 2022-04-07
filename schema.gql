@@ -2,56 +2,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type Role {
-  level: String!
-  label: String!
-  users: User!
-}
-
-type User {
-  id: Int!
-  username: String!
-  email: String!
-  createdAt: DateTime!
-  roles: [RoleWithoutUser!]!
-  profile: ProfileWithoutUser!
-}
-
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
-
-type Profile {
-  displayname: String
-  bio: String
-  profilePicture: String
-  backroundPicture: String
-  user: User!
-}
-
-type ProfileWithoutUser {
-  displayname: String
-  bio: String
-  profilePicture: String
-  backroundPicture: String
-}
-
-type RoleWithoutUser {
-  level: String!
-  label: String!
-}
-
-type FindAllUserOutput {
-  total: Int!
-  users: [User!]!
-}
-
-type LoginOutput {
-  accessToken: String!
-  user: User!
-}
-
 type PostMedia {
   id: Int!
   path: String!
@@ -65,6 +15,11 @@ type PostReport {
   post: Post!
 }
 
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 type Post {
   id: Int!
 
@@ -73,8 +28,154 @@ type Post {
   isFollowOnly: Boolean
   createdAt: DateTime!
   user: User!
-  medias: PostMedia!
-  reports: PostReport!
+  medias: [PostMedia!]!
+  reports(input: GetPostReportsInput): GetPostReportsOutput!
+  author: User!
+  replies(input: PostPaginationInput): PostPaginationOuput!
+  parents(input: PostPaginationInput): PostPaginationOuput!
+}
+
+input GetPostReportsInput {
+  page: Int
+  take: Int
+}
+
+input PostPaginationInput {
+  page: Int
+  take: Int
+}
+
+type PostSave {
+  createdAt: DateTime!
+  user: User!
+  post: Post!
+}
+
+type Profile {
+  id: Int!
+  displayname: String
+  bio: String
+  profilePicture: String
+  backroundPicture: String
+  user: User!
+}
+
+type Role {
+  level: Int!
+  label: String!
+  users: User!
+}
+
+type User {
+  id: Int!
+  username: String!
+  email: String!
+  createdAt: DateTime!
+  roles: [RoleWithoutUser!]!
+
+  """Get user profile"""
+  profile: ProfileWithoutUser!
+  followers(input: FollowInput): FollowOutput!
+  followings(input: FollowInput): FollowOutput!
+
+  """Get user post"""
+  posts(input: GetPostsInput): GetPostsOutput!
+
+  """Get user post"""
+  savedPost(input: GetPostsInput): GetSavedPostsOutput!
+  isFollow: Boolean!
+}
+
+input FollowInput {
+  page: Int
+  take: Int
+}
+
+input GetPostsInput {
+  page: Int
+  take: Int
+  options: GetPostsOptions
+}
+
+input GetPostsOptions {
+  onlyWithMedia: Boolean
+}
+
+type ProfileWithoutUser {
+  id: Int!
+  displayname: String
+  bio: String
+  profilePicture: String
+  backroundPicture: String
+}
+
+type RoleWithoutUser {
+  level: Int!
+  label: String!
+}
+
+type FindAllUserOutput {
+  total: Int!
+  users: [User!]!
+}
+
+type FollowMutationOutput {
+  follower: User!
+  following: User!
+}
+
+type FollowOutput {
+  total: Int!
+  list: [User!]!
+}
+
+type GetPostsOutput {
+  total: Int!
+  list: [Post!]!
+}
+
+type GetSavedPostsOutput {
+  total: Int!
+  list: [PostSave!]!
+}
+
+type RemoveFollowerOutput {
+  userId: Int!
+}
+
+type LoginOutput {
+  accessToken: String!
+  user: User!
+}
+
+type PostMention {
+  user: User!
+  post: Post!
+}
+
+type FeedOuput {
+  total: Int!
+  list: [Post!]!
+}
+
+type FindAllPostOutput {
+  total: Int!
+  list: [Post!]!
+}
+
+type GetPostReportsOutput {
+  total: Int!
+  list: [PostReport!]!
+}
+
+type PostPaginationOuput {
+  total: Int!
+  list: [Post!]!
+}
+
+type FindAllPostReportOutput {
+  list: [PostReport!]
+  total: Int
 }
 
 type Tag {
@@ -82,12 +183,26 @@ type Tag {
   createdAt: DateTime!
 }
 
+type PostTag {
+  tag: Tag!
+  post: Post!
+}
+
 type Query {
+  isFollow(followerId: Int!, followingId: Int!): Boolean!
   users(input: FindAllUserInput): FindAllUserOutput!
   user(username: String!): User!
   me: User!
   login(input: LoginInput!): LoginOutput!
   rememberMe: LoginOutput!
+  posts(input: FindAllPostInput): FindAllPostOutput!
+  post(postId: Int!): Post!
+  feed(input: FeedInput): FeedOuput!
+  postTag(id: Int!): PostTag!
+  tag(id: Int!): Tag!
+  postMention(id: Int!): PostMention!
+  postReport(input: FindAllPostReportInput): FindAllPostReportOutput!
+  isSavedPost(postId: Int!): Boolean!
 }
 
 input FindAllUserInput {
@@ -100,14 +215,56 @@ input LoginInput {
   password: String!
 }
 
+input FindAllPostInput {
+  page: Int
+  take: Int
+  options: FindAllPostOptions
+}
+
+input FindAllPostOptions {
+  page: Int
+}
+
+input FeedInput {
+  page: Int
+  take: Int
+  options: FeedOptions
+}
+
+input FeedOptions {
+  excludeFollowing: Boolean
+}
+
+input FindAllPostReportInput {
+  page: Int
+  take: Int
+}
+
 type Mutation {
+  toggleFollow(followingId: Int!): FollowMutationOutput!
+  removeFollower(followerId: Int!): RemoveFollowerOutput!
   updateSelf(update: UpdateUserInput, profilePictureFile: Upload, backgroundPictureFile: Upload): User!
   createUser(input: CreateUserInput!): LoginOutput!
+  createPost(input: CreatePostInput, medias: [Upload!]): Post!
+  updatePost(input: UpdatePostInput, medias: [Upload!]): Post!
+  deletePost(postId: Float): Int!
+  createPostTag(createPostTagInput: CreatePostTagInput!): PostTag!
+  updatePostTag(updatePostTagInput: UpdatePostTagInput!): PostTag!
+  removePostTag(id: Int!): PostTag!
+  createTag(createTagInput: CreateTagInput!): Tag!
+  updateTag(updateTagInput: UpdateTagInput!): Tag!
+  removeTag(id: Int!): Tag!
+  createPostMention(createPostMentionInput: CreatePostMentionInput!): PostMention!
+  updatePostMention(updatePostMentionInput: UpdatePostMentionInput!): PostMention!
+  removePostMention(id: Int!): PostMention!
+  reportPost(input: PostReportInput!): PostReport!
+  toggleSavePost(postId: Int!): PostSave!
 }
 
 input UpdateUserInput {
   username: String
   email: String
+  isFollow: Boolean
   profile: SubUpdateProfileInput
 }
 
@@ -125,4 +282,63 @@ input CreateUserInput {
   username: String!
   email: String!
   password: String!
+}
+
+input CreatePostInput {
+  """Raw generated by Draft.js"""
+  draftRaw: String
+  isFollowOnly: Boolean
+  postParentId: Int
+}
+
+input UpdatePostInput {
+  id: Int!
+
+  """Raw generated by Draft.js"""
+  draftRaw: String
+  isFollowOnly: Boolean
+  mediasRemovedIds: [Int!]
+}
+
+input CreatePostTagInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input UpdatePostTagInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
+}
+
+input CreateTagInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input UpdateTagInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
+}
+
+input CreatePostMentionInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input UpdatePostMentionInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
+}
+
+input PostReportInput {
+  reason: String!
+  postId: Float!
+}
+
+type Subscription {
+  follow: FollowMutationOutput!
+  reportPost: PostReport!
 }
